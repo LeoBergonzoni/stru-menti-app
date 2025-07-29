@@ -69,10 +69,13 @@ body {
     background-color: #1a1a1a;
     border: 1px solid #333;
     border-radius: 12px;
-    padding: 1rem 1.5rem;
-    max-width: 280px;
-    flex: 1 1 250px;
+    padding: 1rem 1rem;
+    width: 250px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
   }
   
   .plan-box h4 {
@@ -83,6 +86,17 @@ body {
   .plan-box.premium {
     border: 2px solid #ffd700;
     background-color: #222;
+  }
+  
+  .plan-box .btn-small {
+    margin-top: 1rem;
+    padding: 0.4rem 1rem;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
   }
   
   footer {
@@ -110,5 +124,10 @@ body {
     .plan-grid {
       flex-direction: column;
       align-items: center;
+    }
+  
+    .plan-box {
+      width: 90%;
+      max-width: 300px;
     }
   }
