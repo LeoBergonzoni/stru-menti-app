@@ -26,22 +26,29 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     let name = user.displayName;
 
+    // Se non esiste displayName, prova a recuperare da Firestore
     if (!name) {
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        name = docSnap.data().firstName;
+      try {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          name = docSnap.data().firstName || user.email;
+        } else {
+          name = user.email;
+        }
+      } catch (e) {
+        console.error("Errore recupero nome utente:", e);
+        name = user.email;
       }
     }
 
-    if (name) {
-      userInfoDiv.textContent = `👋 Ciao, ${name}!`;
-    }
-
+    userInfoDiv.textContent = `👋 Ciao, ${name}!`;
+    userInfoDiv.style.display = "block";
     logoutBtn.style.display = "inline-block";
     plansSection.style.display = "none";
     premiumOnly.style.display = "block";
   } else {
+    userInfoDiv.style.display = "none";
     logoutBtn.style.display = "none";
     plansSection.style.display = "block";
     premiumOnly.style.display = "none";
