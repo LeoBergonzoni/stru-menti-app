@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Accedi – Stru🧠Menti</title>
-  <meta name="description" content="Accedi per utilizzare gli strumenti intelligenti di StruMenti." />
+  <meta name="description" content="Accedi per usare gli strumenti AI di StruMenti." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
   <link href="style.css" rel="stylesheet">
   <style>
@@ -22,14 +22,14 @@
       margin: 0.5rem 0 0.2rem;
       font-size: 0.9rem;
     }
-    input[type="email"], input[type="password"] {
+    input {
       width: 100%;
       padding: 0.6rem;
       border-radius: 6px;
       border: none;
       margin-bottom: 1rem;
     }
-    button[type="submit"] {
+    button {
       width: 100%;
       padding: 0.7rem;
       background-color: #fff;
@@ -38,6 +38,11 @@
       border-radius: 6px;
       font-size: 1rem;
       cursor: pointer;
+    }
+    #google-login {
+      background: #4285F4;
+      color: white;
+      margin-bottom: 1rem;
     }
     a {
       color: #aaa;
@@ -51,18 +56,21 @@
 <body>
   <header>
     <h1>Accedi</h1>
-    <h2>Inserisci le tue credenziali per continuare</h2>
+    <h2>Usa i tuoi strumenti AI</h2>
   </header>
 
   <main>
     <form id="login-form">
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required>
+      <input type="email" id="email" name="email" required />
 
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
+      <input type="password" id="password" name="password" required />
 
       <button type="submit">Accedi</button>
+
+      <button type="button" id="google-login">Accedi con Google</button>
+
       <a href="signup.html">Non hai un account? Registrati</a>
       <a href="index.html">Torna alla home</a>
     </form>
