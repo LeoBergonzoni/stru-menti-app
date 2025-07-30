@@ -32,7 +32,7 @@ removeButton.addEventListener("click", () => {
 });
 
 async function fetchRecipe(ingredients, location) {
-  const response = await fetch("/.tools/ricettario/netlify/functions/chatgpt", {
+  const response = await fetch("/.tools/ricettario/netlify/functions/chatgpt.js", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
