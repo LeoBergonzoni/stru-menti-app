@@ -1,8 +1,19 @@
 // signup.js
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+// Configurazione Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
   authDomain: "stru-menti.firebaseapp.com",
@@ -14,11 +25,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+// Registrazione classica
 const signupForm = document.getElementById("signup-form");
 
-signupForm.addEventListener("submit", (e) => {
+signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const email = signupForm.email.value;
@@ -32,30 +45,46 @@ signupForm.addEventListener("submit", (e) => {
     return;
   }
 
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      console.log("Registrazione riuscita:", user);
-      alert("Registrazione riuscita! Redirect in corso...");
-      window.location.href = "index.html";
-    })
-    .catch((error) => {
-      console.error("Errore durante la registrazione:", error);
-      alert("Errore: " + error.message);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+    await setDoc(doc(db, "users", cred.user.uid), {
+      firstName,
+      lastName,
+      email,
+      createdAt: new Date()
     });
+
+    alert("Registrazione riuscita! Redirect in corso...");
+    window.location.href = "index.html";
+  } catch (error) {
+    console.error("Errore durante la registrazione:", error);
+    alert("Errore: " + error.message);
+  }
 });
 
+// Registrazione con Google
 const googleSignupBtn = document.getElementById("google-signup");
-googleSignupBtn.addEventListener("click", () => {
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      const user = result.user;
-      console.log("Registrazione con Google riuscita:", user);
-      alert("Accesso con Google riuscito! Redirect in corso...");
-      window.location.href = "index.html";
-    })
-    .catch((error) => {
-      console.error("Errore con Google:", error);
-      alert("Errore: " + error.message);
-    });
+
+googleSignupBtn.addEventListener("click", async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const fullName = user.displayName || "";
+    const [firstName, lastName] = fullName.split(" ");
+
+    await setDoc(doc(db, "users", user.uid), {
+      firstName: firstName || "",
+      lastName: lastName || "",
+      email: user.email,
+      createdAt: new Date()
+    }, { merge: true });
+
+    alert("Accesso con Google riuscito! Redirect in corso...");
+    window.location.href = "index.html";
+  } catch (error) {
+    console.error("Errore con Google:", error);
+    alert("Errore: " + error.message);
+  }
 });

@@ -39,7 +39,7 @@
       font-size: 1rem;
       cursor: pointer;
     }
-    #google-login {
+    #google-signup {
       background: #4285F4;
       color: white;
       margin-bottom: 1rem;
@@ -60,19 +60,20 @@
   </header>
 
   <main>
-      <form id="signup-form">
-        <section class="auth-box">
-          <button id="google-signup" class="google-btn">Sign in with Google</button>
-    
-          <div class="divider">oppure</div>
-    
+    <form id="signup-form">
+      <section class="auth-box">
+        <button id="google-signup" class="google-btn">Sign in with Google</button>
+
+        <div class="divider">oppure</div>
+
         <div class="input-row">
-          <input type="text" name="firstName" placeholder="Nome" required>
-          <input type="text" name="lastName" placeholder="Cognome" required>
+          <input type="text" id="firstName" name="firstName" placeholder="Nome" required>
+          <input type="text" id="lastName" name="lastName" placeholder="Cognome" required>
         </div>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="confirmPassword" placeholder="Conferma password" required>
+
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Conferma password" required>
 
         <label class="terms">
           Registrandoti accetti la nostra <a href="#">Privacy</a> e i <a href="#">Termini</a>.
@@ -81,8 +82,8 @@
 
         <button type="submit" class="submit-btn">Registrati</button>
         <a href="index.html">Torna alla home</a>
-      </form>
-    </section>
+      </section>
+    </form>
   </main>
 
   <footer>
