@@ -180,6 +180,28 @@
   padding-top: 1rem;
   border-top: 1px solid #ddd;
 }
+
+#bottom-nav {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  font-size: 1.5rem;
+  opacity: 0.6;
+}
+
+#bottom-nav a {
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: opacity 0.3s;
+}
+
+#bottom-nav a:hover {
+  opacity: 1;
+}
   </style>
 </head>
 <body>
@@ -240,6 +262,14 @@
       alert('Frase copiata negli appunti!');
     }
   </script>
+
+<div id="bottom-nav">
+  <a href="index.html" title="Home">🏠</a>
+  <a href="tools/ricettario/public/index.html" title="Il Ricettario">🍳</a>
+  <a href="tools/prezzogiusto/public/index.html" title="Prezzo Giusto">💶</a>
+</div>
+
+
   <footer class="site-footer">
     &copy; 2025 Be-Kind da Stru🧠Menti – Da un’idea di Veronica Carobene e Silvia Tugnoli, creato da Leonardo Bergonzoni con ❤️ e AI
   </footer>
