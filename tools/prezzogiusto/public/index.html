@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sto pagando il giusto prezzo?</title>
+  <script defer src="script.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💶</text></svg>">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y66TMZJXBX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-Y66TMZJXBX');
+  </script>
+
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #1e3a8a, #0f172a);
+    }
+
+    #cookie-banner {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(6px);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      display: none;
+      z-index: 100;
+      max-width: 90vw;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #cookie-banner.show {
+      display: block;
+    }
+
+    #cookie-ok {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background-color: rgba(255, 255, 255, 0.25);
+      border: none;
+      padding: 0.4rem 0.9rem;
+      border-radius: 0.3rem;
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    #cookie-ok:hover {
+      background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body class="text-white font-sans min-h-screen flex flex-col items-center justify-center px-4">
+
+  <div class="max-w-xl w-full p-6 bg-white bg-opacity-10 backdrop-blur-md rounded shadow text-white">
+    <h1 class="text-3xl font-bold mb-4 text-center">💰 Sto pagando il giusto prezzo?</h1>
+    <p class="text-center mb-6 text-sm">Inserisci il prodotto che stai acquistando e dove ti trovi e ti faremo sapere se stai spendendo il giusto prezzo! 🛍️📍💶</p>
+    <form id="priceForm" class="space-y-4">
+      <div>
+        <label class="block font-medium">Cosa stai acquistando?</label>
+        <input type="text" id="product" class="w-full border border-white bg-transparent p-2 rounded text-white placeholder-white" placeholder="Es. iPhone 15" required>
+      </div>
+      <div>
+        <label class="block font-medium">Quanto lo stai pagando? (€)</label>
+        <input type="text" id="price" class="w-full border border-white bg-transparent p-2 rounded text-white placeholder-white" placeholder="Es. 899" required>
+      </div>
+      <div>
+        <label class="block font-medium">Dove ti trovi?</label>
+        <select id="location" class="w-full border border-white bg-transparent p-2 rounded text-white">
+          <option value="online">🛒 Sto acquistando Online</option>
+          <option value="geolocate">📍 Usa la mia posizione</option>
+          <option value="custom">✏️ Inserisco manualmente</option>
+        </select>
+        <input type="text" id="customLocation" class="w-full border border-white bg-transparent p-2 rounded mt-2 text-white placeholder-white hidden" placeholder="Es. Milano, Italia">
+      </div>
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white w-full p-3 rounded font-semibold transition duration-200">Sto pagando il giusto prezzo? 🤔</button>
+    </form>
+
+    <div id="result" class="mt-6 hidden p-4 rounded text-white font-bold text-center"></div>
+  </div>
+
+  <footer class="mt-6 text-sm text-white text-opacity-70">
+    &copy; 2025 Prezzo Giusto da Stru🧠Menti – Creato da Leonardo Bergonzoni con ❤️ e AI
+  </footer>
+
+  <!-- Cookie Banner -->
+  <div id="cookie-banner">
+    <span>Questo sito utilizza solo cookie tecnici per migliorare l’esperienza.</span><br>
+    <button id="cookie-ok">OK</button>
+  </div>
+
+  <!-- Script per gestione Cookie -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const banner = document.getElementById("cookie-banner");
+      const okBtn = document.getElementById("cookie-ok");
+
+      if (!localStorage.getItem("cookieAccepted")) {
+        banner.classList.add("show");
+      }
+
+      okBtn.addEventListener("click", () => {
+        banner.classList.remove("show");
+        localStorage.setItem("cookieAccepted", "true");
+      });
+    });
+  </script>
+</body>
+</html>
