@@ -1,0 +1,11 @@
+{
+  "name": "strumenti-ai",
+  "version": "1.0.0",
+  "description": "Web app con strumenti AI: Ricettario, Be Kind, Prezzo Giusto",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^5.10.1",
+    "node-fetch": "^2.7.0"
+  }
+}

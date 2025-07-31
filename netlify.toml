@@ -1,5 +1,5 @@
 [build]
-  publish = "."
-
+  publish = "."  
+  
 [functions]
-directory = "tools/ricettario/netlify/functions"
+  directory = "netlify/functions"
