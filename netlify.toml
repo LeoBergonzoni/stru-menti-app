@@ -2,4 +2,3 @@
 directory = "tools/ricettario/netlify/functions"
 [build]
   publish = "public"
-  functions = "netlify/functions"
