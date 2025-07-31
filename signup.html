@@ -1,93 +1,164 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registrazione – Stru🧠Menti</title>
   <meta name="description" content="Crea un account per accedere agli strumenti di intelligenza artificiale di StruMenti." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
   <link href="style.css" rel="stylesheet">
+
   <style>
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background-color: #000;
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #eee;
+    }
+
+    header {
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    h1, h2 {
+      margin: 0.3rem;
+      color: #eee;
+    }
+
     form {
-      max-width: 320px;
-      margin: 0 auto;
+      max-width: 360px;
+      margin: 2rem auto;
       background-color: #1a1a1a;
       border: 1px solid #333;
       padding: 2rem;
       border-radius: 12px;
+      box-sizing: border-box;
     }
-    label {
-      display: block;
-      text-align: left;
-      margin: 0.5rem 0 0.2rem;
-      font-size: 0.9rem;
-    }
+
     input {
       width: 100%;
-      padding: 0.6rem;
-      border-radius: 6px;
-      border: none;
-      margin-bottom: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 0.7rem;
-      background-color: #fff;
-      color: #000;
-      border: none;
-      border-radius: 6px;
+      padding: 0.65rem;
       font-size: 1rem;
-      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
     }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .input-row input {
+      flex: 1;
+    }
+
+    button {
+      background: #322290;
+      color: rgb(255, 255, 255);
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+
     #google-signup {
-      background: #4285F4;
-      color: white;
+      background: #ffffff;
+      color: rgb(0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    #google-signup img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .divider {
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      margin: 1rem 0;
+    }
+
+    label.terms {
+      font-size: 0.8rem;
+      display: block;
+      color: #aaa;
       margin-bottom: 1rem;
     }
+
+    label.terms a {
+      color: #ccc;
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #999;
+      margin: 2rem 0 1rem;
+    }
+
     a {
       color: #aaa;
-      font-size: 0.85rem;
-      display: inline-block;
-      margin-top: 1rem;
       text-decoration: underline;
     }
   </style>
 </head>
+
 <body>
   <header>
     <h1>Registrati</h1>
-    <h2>Crea un account per usare gli strumenti</h2>
+    <h2>Crea un account per usare gli Stru🧠Menti AI</h2>
   </header>
 
   <main>
     <form id="signup-form">
-      <section class="auth-box">
-        <button id="google-signup" class="google-btn">Sign in with Google</button>
+      <button id="google-signup" type="button">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" />
+        Registrati con Google
+      </button>
 
-        <div class="divider">oppure</div>
+      <div class="divider">oppure</div>
 
-        <div class="input-row">
-          <input type="text" id="firstName" name="firstName" placeholder="Nome" required>
-          <input type="text" id="lastName" name="lastName" placeholder="Cognome" required>
-        </div>
+      <div class="input-row">
+        <input type="text" id="firstName" name="firstName" placeholder="Nome" required />
+        <input type="text" id="lastName" name="lastName" placeholder="Cognome" required />
+      </div>
 
-        <input type="email" id="email" name="email" placeholder="Email" required>
-        <input type="password" id="password" name="password" placeholder="Password" required>
-        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Conferma password" required>
+      <input type="email" id="email" name="email" placeholder="Email" inputmode="email" required />
+      <input type="password" id="password" name="password" placeholder="Password" inputmode="text" required />
+      <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Conferma password" inputmode="text" required />
 
-        <label class="terms">
-          Registrandoti accetti la nostra <a href="#">Privacy</a> e i <a href="#">Termini</a>.
-          <input type="checkbox" required> 
-        </label>
+      <label class="terms">
+        Registrandoti accetti la nostra <a href="#">Privacy</a> e i <a href="#">Termini</a>.
+        <input type="checkbox" required /> 
+      </label>
 
-        <button type="submit" class="submit-btn">Registrati</button>
-        <a href="index.html">Torna alla home</a>
-      </section>
+      <button type="submit" class="submit-btn">Registrati</button>
+
+      <a href="login.html">Hai già un account? Accedi</a><br>
+      <a href="index.html">Torna alla home</a>
     </form>
   </main>
 
   <footer>
-    <p><a href="login.html">Hai già un account? Accedi</a></p>
+    &copy; 2025 Stru🧠Menti
   </footer>
 
   <script type="module" src="signup.js"></script>
