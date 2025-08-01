@@ -16,17 +16,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Elementi DOM
 const userInfoDiv = document.getElementById("user-info");
-const logoutBtn = document.getElementById("logout-btn");
 const plansSection = document.getElementById("plans-section");
 const premiumOnly = document.getElementById("premium-only");
+const footerAuthLinks = document.getElementById("auth-links");
+const footerLogoutBtn = document.getElementById("footer-logout-btn");
 
-// Mostra nome e gestisci UI
+// Stato autenticazione
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     let name = user.displayName;
 
-    // Se non esiste displayName, prova a recuperare da Firestore
     if (!name) {
       try {
         const docRef = doc(db, "users", user.uid);
@@ -44,19 +45,23 @@ onAuthStateChanged(auth, async (user) => {
 
     userInfoDiv.textContent = `👋 Ciao, ${name}!`;
     userInfoDiv.style.display = "block";
-    logoutBtn.style.display = "inline-block";
     plansSection.style.display = "none";
     premiumOnly.style.display = "block";
+
+    footerAuthLinks.style.display = "none";
+    footerLogoutBtn.style.display = "inline-block";
   } else {
     userInfoDiv.style.display = "none";
-    logoutBtn.style.display = "none";
     plansSection.style.display = "block";
     premiumOnly.style.display = "none";
+
+    footerAuthLinks.style.display = "inline";
+    footerLogoutBtn.style.display = "none";
   }
 });
 
 // Logout
-logoutBtn.addEventListener("click", () => {
+footerLogoutBtn.addEventListener("click", () => {
   signOut(auth).then(() => {
     location.reload();
   });
