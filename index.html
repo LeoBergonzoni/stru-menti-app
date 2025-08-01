@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stru🧠Menti – App Centrale</title>
   <meta name="description" content="Accedi agli strumenti di AI per la vita quotidiana: ricette, comunicazione gentile, analisi prezzi. Tutto in un unico spazio smart." />
+  <!-- Font & Analytics -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-912CBJB8ZW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  function enableAnalytics() {
+    gtag('config', 'G-912CBJB8ZW', { 'anonymize_ip': true });
+  }
+</script>
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
   <link href="style.css" rel="stylesheet">
 </head>
@@ -54,6 +71,26 @@
     <p>Vuoi usare gli strumenti senza limiti?</p>
     <a class="btn-small" href="#">Passa a Premium</a>
   </section>
+
+  <div id="cookie-banner">
+    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html">Scopri di più</a>.
+    <button onclick="acceptCookies()">Accetta</button>
+  </div>
+
+  <script>
+    function acceptCookies() {
+      document.getElementById('cookie-banner').style.display = 'none';
+      localStorage.setItem('analyticsAccepted', 'true');
+      enableAnalytics();
+    }
+
+    window.onload = function() {
+      if (localStorage.getItem('analyticsAccepted') === 'true') {
+        enableAnalytics();
+      }
+    }
+  </script>
+
   <footer>
     <p>
       <span id="auth-links"><a href="login.html">Accedi</a> | <a href="signup.html">Registrati</a></span>
