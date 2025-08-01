@@ -72,9 +72,9 @@
     <a class="btn-small" href="#">Passa a Premium</a>
   </section>
 
-  <div id="cookie-banner">
+  <div id="cookie-banner" style="display: none;">
     Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
-    <button onclick="acceptCookies()">Accetta</button>
+    <button onclick="acceptCookies()">Ok</button>
   </div>
 
   <script>
@@ -83,12 +83,14 @@
       localStorage.setItem('analyticsAccepted', 'true');
       enableAnalytics();
     }
-
-    window.onload = function() {
+  
+    window.onload = function () {
       if (localStorage.getItem('analyticsAccepted') === 'true') {
         enableAnalytics();
+      } else {
+        document.getElementById('cookie-banner').style.display = 'block';
       }
-    }
+    };
   </script>
 
   <footer>

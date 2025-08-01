@@ -226,10 +226,24 @@
   </div>
 
   <!-- ✅ Cookie banner -->
-  <div class="cookie-banner" id="cookieBanner">
-    Questo sito utilizza Google Analytics per capire come viene utilizzato. Nessun tracciamento personale è salvato. 
-    <button onclick="document.getElementById('cookieBanner').style.display='none'">OK</button>
+  <div class="cookie-banner" id="cookieBanner" style="display: none;">
+    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
+    <button onclick="acceptCookies()">Ok</button>
   </div>
+
+  <script>
+    function acceptCookies() {
+      document.getElementById('cookieBanner').style.display = 'none';
+      localStorage.setItem('cookiesAccepted', 'true');
+      // Se vuoi attivare Analytics solo dopo il consenso, attiva qui: enableAnalytics();
+    }
+  
+    window.onload = function () {
+      if (!localStorage.getItem('cookiesAccepted')) {
+        document.getElementById('cookieBanner').style.display = 'block';
+      }
+    };
+  </script>
 
   <script>
     const beKindBtn = document.getElementById('beKindBtn');
