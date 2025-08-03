@@ -1,80 +1,16 @@
-// Firebase setup
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+// Firebase (localStorage per ora, ma puoi estendere)
+const firebaseConfig = {
+  apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
+  authDomain: "stru-menti.firebaseapp.com",
+  projectId: "stru-menti",
+  storageBucket: "stru-menti.appspot.com",
+  messagingSenderId: "851395234512",
+  appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
+};
 
-const auth = getAuth();
-const db = getFirestore();
-let user = null;
-let clickLimit = 15;
+// Nessuna chiamata initializeApp() perché usiamo solo localStorage per ora
 
-const clickCounter = document.createElement("div");
-clickCounter.id = "click-counter";
-clickCounter.style.textAlign = "center";
-clickCounter.style.fontSize = "0.85rem";
-clickCounter.style.color = "#888";
-clickCounter.style.marginTop = "1rem";
-document.querySelector(".container").appendChild(clickCounter);
-
-onAuthStateChanged(auth, async (u) => {
-  user = u;
-  const now = new Date();
-  const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
-
-  if (user) {
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      await setDoc(docRef, { usage: {}, premium: false });
-    }
-
-    const data = (await getDoc(docRef)).data();
-    clickLimit = data.premium ? 300 : 30;
-    const clicks = data.usage?.[monthKey] || 0;
-    updateCounter(clicks, clickLimit);
-  } else {
-    const localClicks = parseInt(localStorage.getItem(`ricettario_${monthKey}`) || "0");
-    updateCounter(localClicks, clickLimit);
-  }
-});
-
-function updateCounter(count, limit) {
-  clickCounter.textContent = `🍳 Ricette usate: ${count}/${limit}`;
-}
-
-async function checkAndIncrementClick() {
-  const now = new Date();
-  const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
-
-  if (user) {
-    const ref = doc(db, "users", user.uid);
-    const docSnap = await getDoc(ref);
-    const data = docSnap.data();
-    const currentClicks = data.usage?.[monthKey] || 0;
-
-    if (currentClicks >= clickLimit) {
-      alert("Hai raggiunto il limite mensile di utilizzo.");
-      return false;
-    }
-
-    await updateDoc(ref, {
-      [`usage.${monthKey}`]: increment(1)
-    });
-    updateCounter(currentClicks + 1, clickLimit);
-    return true;
-  } else {
-    const localKey = `ricettario_${monthKey}`;
-    let clicks = parseInt(localStorage.getItem(localKey) || "0");
-    if (clicks >= clickLimit) {
-      alert("Hai raggiunto il limite. Accedi per ottenere più utilizzi!");
-      return false;
-    }
-    localStorage.setItem(localKey, clicks + 1);
-    updateCounter(clicks + 1, clickLimit);
-    return true;
-  }
-}
-
+// UI references
 const ingredientContainer = document.getElementById("ingredient-fields");
 const addButton = document.getElementById("add-ingredient");
 const removeButton = document.getElementById("remove-ingredient");
@@ -89,6 +25,7 @@ const copyBtn = document.getElementById("copy-recipe");
 let maxIngredients = 10;
 let minIngredients = 2;
 
+// ➕➖ Aggiungi/Rimuovi ingredienti
 addButton.addEventListener("click", () => {
   const currentInputs = ingredientContainer.querySelectorAll("input").length;
   if (currentInputs < maxIngredients) {
@@ -108,6 +45,48 @@ removeButton.addEventListener("click", () => {
   }
 });
 
+// 🔄 Reset mensile dei click (locale)
+function resetMonthlyClickCount() {
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+  const lastSavedMonth = localStorage.getItem("ricettario-click-month");
+
+  if (lastSavedMonth !== monthKey) {
+    localStorage.setItem("ricettario-click-month", monthKey);
+    localStorage.setItem("ricettario-click-count", "0");
+  }
+}
+
+function getClickCount() {
+  return parseInt(localStorage.getItem("ricettario-click-count") || "0");
+}
+
+function incrementClickCount() {
+  const current = getClickCount();
+  localStorage.setItem("ricettario-click-count", current + 1);
+  updateClickDisplay();
+}
+
+function updateClickDisplay() {
+  let display = document.getElementById("click-counter");
+  if (!display) {
+    display = document.createElement("div");
+    display.id = "click-counter";
+    display.style.fontSize = "0.85rem";
+    display.style.color = "#888";
+    display.style.textAlign = "center";
+    display.style.margin = "1rem auto";
+    form.parentNode.insertBefore(display, form.nextSibling);
+  }
+
+  const count = getClickCount();
+  display.textContent = `Hai usato questo strumento ${count}/15 volte questo mese`;
+}
+
+resetMonthlyClickCount();
+updateClickDisplay();
+
+// 🎯 Chiamata a funzione server
 async function fetchRecipe(ingredients, location) {
   const response = await fetch("/.netlify/functions/ricettario-chatgpt", {
     method: "POST",
@@ -121,11 +100,14 @@ async function fetchRecipe(ingredients, location) {
   return data.message;
 }
 
+// 🚀 Invio del form
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const allowed = await checkAndIncrementClick();
-  if (!allowed) return;
+  if (getClickCount() >= 15) {
+    alert("Hai raggiunto il limite mensile gratuito per questo strumento. Accedi o passa a Premium per continuare.");
+    return;
+  }
 
   const ingredients = Array.from(
     document.querySelectorAll("input[name='ingredient']")
@@ -137,20 +119,31 @@ form.addEventListener("submit", async (e) => {
   recipeTitle.textContent = "";
   recipeOutput.classList.remove("hidden");
 
-  const recipe = await fetchRecipe(ingredients, location);
+  try {
+    const recipe = await fetchRecipe(ingredients, location);
 
-  const [titleLine, ...rest] = recipe.split('\n');
-  const cleanTitle = titleLine.replace(/^\[#*\- ]+/, '').trim();
-  const body = rest.join('\n').trim();
+    // Estrai titolo e corpo della ricetta
+    const [titleLine, ...rest] = recipe.split('\n');
+    const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').trim();
+    const body = rest.join('\n').trim();
 
-  recipeTitle.textContent = `🍽️ ${cleanTitle}`;
-  recipeText.textContent = body;
+    recipeTitle.textContent = `🍽️ ${cleanTitle}`;
+    recipeText.textContent = body;
+
+    incrementClickCount();
+  } catch (error) {
+    recipeTitle.textContent = "Errore";
+    recipeText.textContent = "Impossibile generare la ricetta. Riprova più tardi.";
+    console.error("Errore nella richiesta:", error);
+  }
 });
 
+// 🔁 Nuova ricetta
 newRecipeBtn.addEventListener("click", () => {
   form.dispatchEvent(new Event("submit"));
 });
 
+// 📋 Copia
 copyBtn.addEventListener("click", () => {
   const fullText = `${recipeTitle.textContent}\n\n${recipeText.textContent}`;
   navigator.clipboard.writeText(fullText);
