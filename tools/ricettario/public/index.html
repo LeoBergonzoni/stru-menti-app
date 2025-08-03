@@ -51,27 +51,37 @@
         margin-top: 0;
       }
     }
+
     #bottom-nav {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  font-size: 1.5rem;
-  opacity: 0.6;
-}
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      font-size: 1.5rem;
+      opacity: 0.6;
+    }
 
-#bottom-nav a {
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  transition: opacity 0.3s;
-}
+    #bottom-nav a {
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+      transition: opacity 0.3s;
+    }
 
-#bottom-nav a:hover {
-  opacity: 1;
-}
+    #bottom-nav a:hover {
+      opacity: 1;
+    }
+
+    /* Popup Modale */
+    #popup-modal {
+      display: none;
+    }
+
+    #popup-modal.active {
+      display: flex;
+    }
   </style>
 </head>
 <body>
@@ -80,6 +90,8 @@
     <p class="description">
       Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
     </p>
+
+    <div id="user-level" class="text-sm text-center text-gray-600 mb-2">Caricamento livello utente...</div>
 
     <form id="ingredients-form">
       <div id="ingredient-fields">
@@ -108,6 +120,16 @@
         <button id="new-recipe">🔁 Nuova ricetta</button>
         <button id="copy-recipe">📋 Copia</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modale blocco click -->
+  <div id="popup-modal" class="hidden fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-70 z-50">
+    <div class="bg-white p-6 rounded-lg text-center max-w-sm">
+      <h2 class="text-xl font-bold mb-4">Limite raggiunto</h2>
+      <p class="mb-4">Hai raggiunto il limite massimo di click per questo mese.</p>
+      <a href="/login.html" class="bg-purple-700 text-white px-4 py-2 rounded">Accedi o Registrati</a>
+      <button id="close-modal" class="block mt-4 text-gray-600 underline">Chiudi</button>
     </div>
   </div>
 
@@ -149,7 +171,7 @@
     };
   </script>
 
-<script type="module" src="script.js"></script>
+  <script type="module" src="script.js"></script>
 
   <div id="bottom-nav">
     <a href="https://stru-menti-app.netlify.app/" title="Home">🏠</a>
