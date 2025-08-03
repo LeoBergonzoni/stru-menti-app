@@ -1,3 +1,80 @@
+// Firebase setup
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
+let user = null;
+let clickLimit = 15;
+
+const clickCounter = document.createElement("div");
+clickCounter.id = "click-counter";
+clickCounter.style.textAlign = "center";
+clickCounter.style.fontSize = "0.85rem";
+clickCounter.style.color = "#888";
+clickCounter.style.marginTop = "1rem";
+document.querySelector(".container").appendChild(clickCounter);
+
+onAuthStateChanged(auth, async (u) => {
+  user = u;
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+
+  if (user) {
+    const docRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      await setDoc(docRef, { usage: {}, premium: false });
+    }
+
+    const data = (await getDoc(docRef)).data();
+    clickLimit = data.premium ? 300 : 30;
+    const clicks = data.usage?.[monthKey] || 0;
+    updateCounter(clicks, clickLimit);
+  } else {
+    const localClicks = parseInt(localStorage.getItem(`ricettario_${monthKey}`) || "0");
+    updateCounter(localClicks, clickLimit);
+  }
+});
+
+function updateCounter(count, limit) {
+  clickCounter.textContent = `🍳 Ricette usate: ${count}/${limit}`;
+}
+
+async function checkAndIncrementClick() {
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+
+  if (user) {
+    const ref = doc(db, "users", user.uid);
+    const docSnap = await getDoc(ref);
+    const data = docSnap.data();
+    const currentClicks = data.usage?.[monthKey] || 0;
+
+    if (currentClicks >= clickLimit) {
+      alert("Hai raggiunto il limite mensile di utilizzo.");
+      return false;
+    }
+
+    await updateDoc(ref, {
+      [`usage.${monthKey}`]: increment(1)
+    });
+    updateCounter(currentClicks + 1, clickLimit);
+    return true;
+  } else {
+    const localKey = `ricettario_${monthKey}`;
+    let clicks = parseInt(localStorage.getItem(localKey) || "0");
+    if (clicks >= clickLimit) {
+      alert("Hai raggiunto il limite. Accedi per ottenere più utilizzi!");
+      return false;
+    }
+    localStorage.setItem(localKey, clicks + 1);
+    updateCounter(clicks + 1, clickLimit);
+    return true;
+  }
+}
+
 const ingredientContainer = document.getElementById("ingredient-fields");
 const addButton = document.getElementById("add-ingredient");
 const removeButton = document.getElementById("remove-ingredient");
@@ -47,6 +124,9 @@ async function fetchRecipe(ingredients, location) {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const allowed = await checkAndIncrementClick();
+  if (!allowed) return;
+
   const ingredients = Array.from(
     document.querySelectorAll("input[name='ingredient']")
   ).map(input => input.value.trim()).filter(Boolean);
@@ -59,9 +139,8 @@ form.addEventListener("submit", async (e) => {
 
   const recipe = await fetchRecipe(ingredients, location);
 
-  // Estrai titolo e corpo della ricetta
   const [titleLine, ...rest] = recipe.split('\n');
-  const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').trim(); // rimuove eventuali simboli Markdown
+  const cleanTitle = titleLine.replace(/^\[#*\- ]+/, '').trim();
   const body = rest.join('\n').trim();
 
   recipeTitle.textContent = `🍽️ ${cleanTitle}`;
