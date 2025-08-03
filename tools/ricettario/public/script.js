@@ -31,9 +31,13 @@ const recipeTitle = document.querySelector("#recipe-output h2");
 const recipeText = document.getElementById("recipe-text");
 const newRecipeBtn = document.getElementById("new-recipe");
 const copyBtn = document.getElementById("copy-recipe");
-const userLevelLabel = document.getElementById("user-level");
 const modal = document.getElementById("popup-modal");
 const modalClose = document.getElementById("close-modal");
+
+// Contatore visibile in fondo
+const counterDiv = document.createElement("div");
+counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85rem; color:#888;";
+document.body.insertBefore(counterDiv, document.querySelector("footer"));
 
 let user = null;
 let userPlan = "anonymous";
@@ -44,6 +48,10 @@ const getCurrentMonthKey = () => {
   const now = new Date();
   return `${now.getFullYear()}-${now.getMonth() + 1}`;
 };
+
+function updateCounter() {
+  counterDiv.innerHTML = `👤 Utente: <strong>${userPlan}</strong> — Utilizzi: <strong>${monthlyClicks}/${maxClicks}</strong>`;
+}
 
 onAuthStateChanged(auth, async (currentUser) => {
   if (currentUser) {
@@ -68,19 +76,18 @@ onAuthStateChanged(auth, async (currentUser) => {
     } else {
       monthlyClicks = clickSnap.data()[monthKey] || 0;
     }
-
-    userLevelLabel.textContent = `👤 Livello: ${userPlan}`;
   } else {
     // Anonimo
     user = null;
-    userPlan = "anonymous";
+    userPlan = "Anonimo";
     maxClicks = 15;
     const storedClicks = localStorage.getItem("anonClicks");
     const storedMonth = localStorage.getItem("anonMonth");
     const nowMonth = getCurrentMonthKey();
     monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
-    userLevelLabel.textContent = "👤 Livello: Anonimo";
   }
+
+  updateCounter();
 });
 
 addButton.addEventListener("click", () => {
@@ -139,6 +146,8 @@ form.addEventListener("submit", async (e) => {
     localStorage.setItem("anonClicks", monthlyClicks);
     localStorage.setItem("anonMonth", getCurrentMonthKey());
   }
+
+  updateCounter(); // aggiorna subito il testo visibile
 });
 
 newRecipeBtn.addEventListener("click", () => {
