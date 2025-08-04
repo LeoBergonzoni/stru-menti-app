@@ -87,6 +87,13 @@ onAuthStateChanged(auth, async (currentUser) => {
     monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
   }
 
+  if (monthlyClicks >= maxClicks) {
+    alert("Hai raggiunto il numero massimo di utilizzi mensili per utenti anonimi. Per continuare, effettua il login.");
+    window.location.href = "/login.html";
+    return;
+  }
+
+
   updateCounter();
 });
 
