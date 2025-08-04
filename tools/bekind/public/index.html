@@ -4,18 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Con la gentilezza si ottiene tutto</title>
-  <!-- ✅ Favicon emoji 🌸 -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
-
-  <!-- ✅ Google Analytics (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6J95ZNVG12"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-6J95ZNVG12');
-  </script>
-
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <script type="module" src="firebase-script.js"></script>
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -28,185 +18,66 @@
       box-sizing: border-box;
       line-height: 1.6;
     }
-
-    h1 {
-      text-align: center;
-      color: #4a7c59;
-      font-size: 2.2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .intro {
-      text-align: center;
-      color: #555;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 0 1rem;
-      box-sizing: border-box;
-    }
-
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
+    h1 { text-align: center; color: #4a7c59; font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .intro { text-align: center; color: #555; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; padding: 0 1rem; }
+    label { font-weight: bold; display: block; margin-bottom: 0.5rem; }
     textarea {
-      width: 100%;
-      max-width: 100%;
-      height: 150px;
-      padding: 1rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      resize: vertical;
-      background: #fff;
-      box-sizing: border-box;
+      width: 100%; height: 150px; padding: 1rem; font-size: 1rem;
+      border: 1px solid #ccc; border-radius: 10px; resize: vertical;
+      background: #fff; box-sizing: border-box;
     }
-
-    .btn-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-
+    .btn-container { display: flex; justify-content: center; margin-top: 1rem; }
     #beKindBtn {
-      padding: 0.7rem 1.5rem;
-      font-size: 1.1rem;
-      background-color: #a3d2ca;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
+      padding: 0.7rem 1.5rem; font-size: 1.1rem;
+      background-color: #a3d2ca; border: none;
+      border-radius: 8px; cursor: pointer;
     }
-
-    #beKindBtn:hover {
-      background-color: #92c6bc;
-    }
-
+    #beKindBtn:hover { background-color: #92c6bc; }
     .output {
-      margin-top: 2rem;
-      background-color: #ffffff;
-      padding: 1.5rem 1rem;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      width: 100%;
-      box-sizing: border-box;
+      margin-top: 2rem; background-color: #ffffff;
+      padding: 1.5rem 1rem; border-radius: 10px;
+      border: 1px solid #ccc; width: 100%;
     }
-
     .copy-btn {
-      margin-top: 1rem;
-      background-color: #f7d6e0;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      display: inline-block;
+      margin-top: 1rem; background-color: #f7d6e0;
+      border: none; padding: 0.4rem 0.8rem; border-radius: 6px;
+      cursor: pointer; font-size: 0.9rem;
     }
-
-    .copy-btn:hover {
-      background-color: #efc7d5;
-    }
-
-    #responseText {
-      white-space: pre-wrap;
-    }
-
-    /* ✅ Banner cookie */
+    .copy-btn:hover { background-color: #efc7d5; }
+    #responseText { white-space: pre-wrap; }
     .cookie-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: #e6f2f0;
-      color: #333;
-      font-size: 0.9rem;
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
-      z-index: 1000;
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background-color: #e6f2f0; color: #333; font-size: 0.9rem;
+      padding: 1rem; text-align: center; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); z-index: 1000;
     }
-
     .cookie-banner button {
-      margin-left: 1rem;
-      background-color: #a3d2ca;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    @media screen and (max-width: 480px) {
-      body {
-        padding: 1rem;
-      }
-
-      h1 {
-        font-size: 1.7rem;
-      }
-
-      .intro {
-        font-size: 0.95rem;
-      }
-
-      #beKindBtn {
-        font-size: 1rem;
-        padding: 0.6rem 1.2rem;
-      }
-
-      .copy-btn {
-        font-size: 0.85rem;
-      }
-
-      .cookie-banner {
-        font-size: 0.85rem;
-        padding: 0.8rem;
-      }
-
-      .cookie-banner button {
-        font-size: 0.85rem;
-      }
+      margin-left: 1rem; background-color: #a3d2ca;
+      border: none; padding: 0.4rem 0.8rem;
+      border-radius: 6px; cursor: pointer;
     }
     .site-footer {
-  margin-top: 4rem;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #888;
-  padding-top: 1rem;
-  border-top: 1px solid #ddd;
-}
-
-#bottom-nav {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  font-size: 1.5rem;
-  opacity: 0.6;
-}
-
-#bottom-nav a {
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  transition: opacity 0.3s;
-}
-
-#bottom-nav a:hover {
-  opacity: 1;
-}
+      margin-top: 4rem; text-align: center;
+      font-size: 0.8rem; color: #888;
+      padding-top: 1rem; border-top: 1px solid #ddd;
+    }
+    #bottom-nav {
+      margin-top: 2rem; display: flex; justify-content: center;
+      gap: 1.5rem; font-size: 1.5rem; opacity: 0.6;
+    }
+    #bottom-nav a {
+      text-decoration: none; background: transparent;
+      border: none; cursor: pointer; font-size: 1.5rem;
+      transition: opacity 0.3s;
+    }
+    #bottom-nav a:hover { opacity: 1; }
+    #click-counter {
+      text-align:center; margin-top:1rem;
+      font-size:0.85rem; color:#888;
+    }
   </style>
 </head>
 <body>
   <h1>Con la gentilezza si ottiene tutto 🌸</h1>
-
   <p class="intro">
     Hai qualcosa da dire ma non sai come dirlo in modo gentile, costruttivo o professionale?<br />
     Scrivilo come ti viene, senza pensarci troppo. <br />
@@ -215,7 +86,6 @@
 
   <label for="userInput">Scrivi qui sotto quello che vuoi comunicare, come ti viene di getto:</label>
   <textarea id="userInput" placeholder="Es: Non sopporto il tuo modo di fare!" required></textarea>
-
   <div class="btn-container">
     <button id="beKindBtn">🕊️ Be Kind</button>
   </div>
@@ -225,7 +95,8 @@
     <button class="copy-btn" onclick="copyText()">📋 Copia la frase</button>
   </div>
 
-  <!-- ✅ Cookie banner -->
+  <div id="click-counter"></div>
+
   <div class="cookie-banner" id="cookieBanner" style="display: none;">
     Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
     <button onclick="acceptCookies()">Ok</button>
@@ -235,9 +106,7 @@
     function acceptCookies() {
       document.getElementById('cookieBanner').style.display = 'none';
       localStorage.setItem('cookiesAccepted', 'true');
-      // Se vuoi attivare Analytics solo dopo il consenso, attiva qui: enableAnalytics();
     }
-  
     window.onload = function () {
       if (!localStorage.getItem('cookiesAccepted')) {
         document.getElementById('cookieBanner').style.display = 'block';
@@ -245,44 +114,13 @@
     };
   </script>
 
-  <script>
-    const beKindBtn = document.getElementById('beKindBtn');
-    const outputContainer = document.getElementById('outputContainer');
-    const responseText = document.getElementById('responseText');
+  <script src="script.js" type="module"></script>
 
-    beKindBtn.addEventListener('click', async () => {
-      const userInput = document.getElementById('userInput').value.trim();
-      if (!userInput) return alert('Scrivi prima una frase!');
-
-      const prompt = `Riformula questa frase: "${userInput}" in maniera gentile, corretta e professionale, in modo che chi la legge sia invogliato ad essere d’accordo con te.`;
-
-      try {
-        const res = await fetch('/.netlify/functions/bekind-rewrite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
-        });
-        const data = await res.json();
-        responseText.textContent = data.result || "🤖 L'AI non ha generato una risposta. Riprova con una frase più chiara.";
-        outputContainer.style.display = 'block';
-      } catch (error) {
-        responseText.textContent = 'Errore nella comunicazione con l’intelligenza artificiale.';
-        outputContainer.style.display = 'block';
-      }
-    });
-
-    function copyText() {
-      navigator.clipboard.writeText(responseText.textContent);
-      alert('Frase copiata negli appunti!');
-    }
-  </script>
-
-<div id="bottom-nav">
-  <a href="https://stru-menti-app.netlify.app/" title="Home">🏠</a>
-  <a href="https://stru-menti-app.netlify.app/tools/ricettario/public/index.html" title="Il Ricettario">🍳</a>
-  <a href="https://stru-menti-app.netlify.app/tools/prezzogiusto/public/index.html" title="Prezzo Giusto">💶</a>
-</div>
-
+  <div id="bottom-nav">
+    <a href="https://stru-menti-app.netlify.app/" title="Home">🏠</a>
+    <a href="https://stru-menti-app.netlify.app/tools/ricettario/public/index.html" title="Il Ricettario">🍳</a>
+    <a href="https://stru-menti-app.netlify.app/tools/prezzogiusto/public/index.html" title="Prezzo Giusto">💶</a>
+  </div>
 
   <footer class="site-footer">
     &copy; 2025 Be-Kind da Stru🧠Menti – Da un’idea di Veronica Carobene e Silvia Tugnoli, creato da Leonardo Bergonzoni con ❤️ e AI
