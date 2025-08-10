@@ -1,4 +1,4 @@
-/* struttura di pagina */
+/* struttura pagina */
 body {
   font-family: 'Quicksand', sans-serif;
   background-color: #fff8f0;
@@ -6,14 +6,15 @@ body {
   margin: 0;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;   /* footer/nav restano sotto */
+  flex-direction: column;  /* così footer/nav restano sotto */
 }
 
+/* wrapper che centra solo il box */
 .page-wrapper {
-  flex: 1;                  /* riempie lo spazio centrale */
+  flex: 1;                  /* occupa lo spazio tra header e footer */
   display: flex;
-  justify-content: center;  /* centra orizzontalmente */
-  align-items: center;      /* centra verticalmente */
+  justify-content: center;  /* centro orizzontale */
+  align-items: center;      /* centro verticale */
   padding: 2rem;
 }
 
@@ -21,17 +22,16 @@ body {
 .container {
   max-width: 600px;
   min-width: 320px;
-  min-height: 400px;        /* “cubo” */
+  min-height: 400px;        /* altezza minima per “cubo” */
   max-height: 90vh;
-  margin: 0;                /* è già centrata dal wrapper */
   background: #fff3e6;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  overflow-y: auto;         /* scroll interno se serve */
+  overflow-y: auto;         /* scroll interno se il contenuto supera il box */
 }
 
-/* …tutto il resto del tuo CSS invariato… */
+/* --- il resto del tuo CSS può rimanere identico --- */
 
 h1 {
   text-align: center;
