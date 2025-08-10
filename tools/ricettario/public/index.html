@@ -10,6 +10,8 @@
 
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tailwind per popup identico a Prezzo Giusto -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
   <style>
     #cookie-banner {
@@ -27,7 +29,6 @@
       flex-direction: column;
       gap: 0.5rem;
     }
-
     #cookie-banner button {
       background-color: #e57f3a;
       color: white;
@@ -38,50 +39,20 @@
       cursor: pointer;
       align-self: center;
     }
-
     @media (min-width: 500px) {
-      #cookie-banner {
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-      }
-
-      #cookie-banner button {
-        margin-left: 1rem;
-        margin-top: 0;
-      }
+      #cookie-banner { flex-direction: row; justify-content: center; align-items: center; }
+      #cookie-banner button { margin-left: 1rem; margin-top: 0; }
     }
-
     #bottom-nav {
-      margin-top: 2rem;
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      font-size: 1.5rem;
-      opacity: 0.6;
+      margin-top: 2rem; display: flex; justify-content: center; gap: 1.5rem;
+      font-size: 1.5rem; opacity: 0.6;
     }
+    #bottom-nav a { text-decoration: none; background: transparent; border: none; cursor: pointer; font-size: 1.5rem; transition: opacity 0.3s; }
+    #bottom-nav a:hover { opacity: 1; }
 
-    #bottom-nav a {
-      text-decoration: none;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 1.5rem;
-      transition: opacity 0.3s;
-    }
-
-    #bottom-nav a:hover {
-      opacity: 1;
-    }
-
-    /* Popup Modale */
-    #popup-modal {
-      display: none;
-    }
-
-    #popup-modal.active {
-      display: flex;
-    }
+    /* Mostra/nascondi modale (copriamo anche l'id vecchio per sicurezza) */
+    #popup-modal, #limit-modal { display: none; }
+    #popup-modal.active, #limit-modal.active { display: flex; }
   </style>
 </head>
 <body>
@@ -90,7 +61,6 @@
     <p class="description">
       Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
     </p>
-    
 
     <form id="ingredients-form">
       <div id="ingredient-fields">
@@ -122,19 +92,19 @@
     </div>
   </div>
 
-<!-- Modale blocco click -->
-<div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
-  <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
-    <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
-    <p class="text-sm mb-4">
-      Hai usato il numero massimo di verifiche per questo mese. Accedi o passa al piano Premium per continuare.
-    </p>
-    <div class="flex gap-3 justify-end">
-      <button id="close-limit" class="px-3 py-2 rounded bg-gray-200">Chiudi</button>
-      <a href="/login.html" class="px-3 py-2 rounded bg-blue-600 text-white">Accedi / Registrati</a>
+  <!-- Modale blocco click – IDENTICO a Prezzo Giusto -->
+  <div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
+    <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
+      <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
+      <p class="text-sm mb-4">
+        Hai usato il numero massimo di verifiche per questo mese. Accedi o passa al piano Premium per continuare.
+      </p>
+      <div class="flex gap-3 justify-end">
+        <button id="close-limit" class="px-3 py-2 rounded bg-gray-200">Chiudi</button>
+        <a href="/login.html" class="px-3 py-2 rounded bg-blue-600 text-white">Accedi / Registrati</a>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- Cookie banner -->
   <div id="cookie-banner">
@@ -159,13 +129,11 @@
       `;
       document.head.appendChild(inlineScript);
     }
-
     function acceptCookies() {
       localStorage.setItem('analyticsAccepted', 'true');
       document.getElementById('cookie-banner').style.display = 'none';
       enableAnalytics();
     }
-
     window.onload = () => {
       if (localStorage.getItem('analyticsAccepted') === 'true') {
         document.getElementById('cookie-banner').style.display = 'none';
@@ -183,7 +151,7 @@
   </div>
 
   <footer>
-    &copy; 2025 Ricettario da Stru🧠Menti – Creato da Leonardo Bergonzoni con ❤️ e AI
+    &copy; 2025 Ricettario da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI
   </footer>
 </body>
 </html>

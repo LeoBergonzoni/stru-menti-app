@@ -226,3 +226,6 @@ footer {
 
 #popup-modal, #limit-modal { display: none; }      /* default nascosto */
 #popup-modal.active, #limit-modal.active { display: flex; }  /* mostra + centra */
+
+/* Assicurati che il modale Ricettario sia sopra al cookie banner */
+#limit-modal { z-index: 2000; }

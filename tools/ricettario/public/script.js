@@ -1,10 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, increment
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -31,6 +27,8 @@ const recipeTitle = document.querySelector("#recipe-output h2");
 const recipeText = document.getElementById("recipe-text");
 const newRecipeBtn = document.getElementById("new-recipe");
 const copyBtn = document.getElementById("copy-recipe");
+
+// Modale (id allineato a Prezzo Giusto)
 const modal = document.getElementById("limit-modal");
 const modalClose = document.getElementById("close-limit");
 
@@ -38,11 +36,7 @@ const modalClose = document.getElementById("close-limit");
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85rem; color:#888;";
 const footer = document.querySelector("footer");
-if (footer) {
-  document.body.insertBefore(counterDiv, footer);
-} else {
-  document.body.appendChild(counterDiv);
-}
+if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
 let user = null;
 let userPlan = "Anonimo";
@@ -51,7 +45,6 @@ let maxClicks = 5;
 
 const getCurrentMonthKey = () => {
   const now = new Date();
-  // mese 1-12
   return `${now.getFullYear()}-${now.getMonth() + 1}`;
 };
 
@@ -63,17 +56,14 @@ onAuthStateChanged(auth, async (currentUser) => {
   if (currentUser) {
     user = currentUser;
 
-    // Piano utente
     const userDocRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userDocRef);
     if (userSnap.exists()) {
       const userData = userSnap.data();
       userPlan = userData.plan || "free-logged";
     }
-
     maxClicks = userPlan === "premium" ? 300 : 30;
 
-    // Click mensili
     const clickRef = doc(db, "clicks", user.uid);
     const clickSnap = await getDoc(clickRef);
     const monthKey = getCurrentMonthKey();
@@ -85,7 +75,6 @@ onAuthStateChanged(auth, async (currentUser) => {
       monthlyClicks = clickSnap.data()?.[monthKey] ?? 0;
     }
   } else {
-    // Anonimo
     user = null;
     userPlan = "Anonimo";
     maxClicks = 5;
@@ -107,8 +96,7 @@ addButton.addEventListener("click", () => {
     input.type = "text";
     input.name = "ingredient";
     input.placeholder = `Ingrediente ${currentInputs + 1}`;
-    // Facoltativo: lasciamo i campi extra non obbligatori
-    // input.required = true;
+    // input.required = true; // se vuoi obbligatori, riattiva
     ingredientContainer.appendChild(input);
   }
 });
@@ -139,15 +127,9 @@ form.addEventListener("submit", async (e) => {
   recipeTitle.textContent = "";
   recipeOutput.classList.remove("hidden");
 
-  // Disabilita pulsanti finché attendiamo la risposta
-  const prevStates = {
-    add: addButton.disabled,
-    remove: removeButton.disabled,
-    newBtn: newRecipeBtn.disabled
-  };
-  addButton.disabled = true;
-  removeButton.disabled = true;
-  newRecipeBtn.disabled = true;
+  // Disabilita pulsanti durante la richiesta
+  const prevStates = { add: addButton.disabled, remove: removeButton.disabled, newBtn: newRecipeBtn.disabled };
+  addButton.disabled = true; removeButton.disabled = true; newRecipeBtn.disabled = true;
 
   try {
     const recipe = await fetchRecipe(ingredients, location);
@@ -158,7 +140,7 @@ form.addEventListener("submit", async (e) => {
     recipeTitle.textContent = `🍽️ ${cleanTitle}`;
     recipeText.textContent = body;
 
-    // Aggiorna conteggio SOLO dopo risposta OK
+    // ✅ Incrementa SOLO dopo risposta OK
     monthlyClicks++;
 
     if (user) {
