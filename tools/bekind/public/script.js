@@ -22,7 +22,9 @@ const responseText = document.getElementById('responseText');
 const outputContainer = document.getElementById('outputContainer');
 
 // Modale limite
-const limitModal = document.getElementById('limit-modal');
+const limitModal =
+  document.getElementById('limit-modal') ||
+  document.getElementById('popup-modal');
 const closeLimit = document.getElementById('close-limit');
 
 // Contatore in fondo alla pagina

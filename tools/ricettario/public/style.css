@@ -193,5 +193,36 @@ footer {
   }
 }
 
+/* Overlay modale Ricettario (indipendente da Tailwind) */
+#popup-modal {
+  position: fixed;       /* overlay a schermo intero */
+  inset: 0;              /* top:0; right:0; bottom:0; left:0 */
+  display: none;         /* di default nascosto */
+  align-items: center;   /* centratura contenuto */
+  justify-content: center;
+  background: rgba(0,0,0,0.7);  /* backdrop scuro */
+  z-index: 2000;         /* sopra cookie banner (1000) */
+  padding: 16px;
+}
+#popup-modal.active { display: flex; }
+
+/* “card” interna del modale */
+#popup-modal .modal-card {
+  max-width: 420px;
+  width: 100%;
+  background: #ffffff;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 20px;
+  text-align: center;
+}
+#popup-modal .modal-card h2 { margin: 0 0 10px; }
+#popup-modal .modal-card a,
+#popup-modal .modal-card button {
+  display: inline-block;
+  margin-top: 10px;
+}
+
 #popup-modal, #limit-modal { display: none; }      /* default nascosto */
 #popup-modal.active, #limit-modal.active { display: flex; }  /* mostra + centra */
