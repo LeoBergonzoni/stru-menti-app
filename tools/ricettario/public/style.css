@@ -229,3 +229,27 @@ footer {
 
 /* Assicurati che il modale Ricettario sia sopra al cookie banner */
 #limit-modal { z-index: 2000; }
+
+/* Overlay full‑screen del modale (senza Tailwind) */
+#limit-modal {
+  position: fixed;
+  inset: 0;
+  display: none;              /* verrà messo a flex con .active */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  padding: 16px;
+  z-index: 2000;              /* sopra al cookie banner (1000) */
+}
+#limit-modal.active { display: flex; }
+
+/* Card interna (equivalente a: max-w-md w-full bg-white rounded shadow p-5) */
+#limit-modal > div {
+  max-width: 28rem;           /* ~ max-w-md */
+  width: 100%;
+  background: #ffffff;
+  color: #1f2937;             /* testo scuro */
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 20px;
+}
