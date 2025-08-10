@@ -5,144 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Il Ricettario</title>
 
-  <!-- Favicon emoji 🍳 -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2285%22>🍳</text></svg>">
-
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
-  <!-- Tailwind solo per lo stile del popup -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
   <style>
-    /* Cookie banner inline per comodità */
-    #cookie-banner {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #fff3e6;
-      color: #4b2e2e;
-      padding: 0.8rem 1rem;
-      text-align: center;
-      font-size: 0.85rem;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    /* Cookie banner */
+    #cookie-banner{
+      position:fixed;bottom:0;left:0;width:100%;
+      background:#fff3e6;color:#4b2e2e;padding:0.8rem 1rem;
+      text-align:center;font-size:0.85rem;box-shadow:0 -2px 5px rgba(0,0,0,.05);
+      z-index:1000;display:flex;flex-direction:column;gap:.5rem
     }
-    #cookie-banner button {
-      background-color: #e57f3a;
-      color: white;
-      border: none;
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      align-self: center;
-    }
-    @media (min-width: 500px) {
-      #cookie-banner { flex-direction: row; justify-content: center; align-items: center; }
-      #cookie-banner button { margin-left: 1rem; margin-top: 0; }
-    }
-
-    /* mostra/nascondi modale */
-    #popup-modal, #limit-modal { display: none; }
-    #popup-modal.active, #limit-modal.active { display: flex; }
+    #cookie-banner button{background:#e57f3a;color:#fff;border:0;padding:.4rem 1rem;border-radius:6px;cursor:pointer;align-self:center}
+    @media(min-width:500px){#cookie-banner{flex-direction:row;justify-content:center;align-items:center}#cookie-banner button{margin-left:1rem;margin-top:0}}
+    /* toggle modale */
+    #limit-modal{display:none}
+    #limit-modal.active{display:flex}
   </style>
 </head>
 <body>
-  <!-- 🔲 wrapper che centra SOLO il box -->
-  <div class="page-wrapper">
-    <div class="container">
-      <h1>🍝 Il Ricettario</h1>
-      <p class="description">
-        Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
-      </p>
+  <div class="container">
+    <h1>🍝 Il Ricettario</h1>
+    <p class="description">
+      Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
+    </p>
 
-      <form id="ingredients-form">
-        <div id="ingredient-fields">
-          <input type="text" name="ingredient" placeholder="Ingrediente 1" required />
-          <input type="text" name="ingredient" placeholder="Ingrediente 2" required />
-        </div>
+    <form id="ingredients-form">
+      <div id="ingredient-fields">
+        <input type="text" name="ingredient" placeholder="Ingrediente 1" required />
+        <input type="text" name="ingredient" placeholder="Ingrediente 2" required />
+      </div>
 
-        <div class="ingredient-buttons">
-          <button type="button" id="add-ingredient">➕</button>
-          <button type="button" id="remove-ingredient">➖</button>
-        </div>
+      <div class="ingredient-buttons">
+        <button type="button" id="add-ingredient">➕</button>
+        <button type="button" id="remove-ingredient">➖</button>
+      </div>
 
-        <label for="location">Dove la mangi?</label>
-        <select id="location" required>
-          <option value="a casa (calda)">A casa (calda)</option>
-          <option value="da portare in ufficio">Da portare in ufficio</option>
-        </select>
+      <label for="location">Dove la mangi?</label>
+      <select id="location" required>
+        <option value="a casa (calda)">A casa (calda)</option>
+        <option value="da portare in ufficio">Da portare in ufficio</option>
+      </select>
 
-        <button type="submit" id="generate-recipe">🍳 Prepara</button>
-      </form>
+      <button type="submit" id="generate-recipe">🍳 Prepara</button>
+    </form>
 
-      <div id="recipe-output" class="hidden">
-        <h2></h2>
-        <div id="recipe-text"></div>
-        <div class="actions">
-          <button id="new-recipe">🔁 Nuova ricetta</button>
-          <button id="copy-recipe">📋 Copia</button>
-        </div>
+    <div id="recipe-output" class="hidden">
+      <h2></h2>
+      <div id="recipe-text"></div>
+      <div class="actions">
+        <button id="new-recipe">🔁 Nuova ricetta</button>
+        <button id="copy-recipe">📋 Copia</button>
       </div>
     </div>
   </div>
 
-  <!-- Modale blocco click (identico a Prezzo Giusto) -->
-  <div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
-    <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
-      <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
-      <p class="text-sm mb-4">
-        Hai usato il numero massimo di verifiche per questo mese. Accedi o passa al piano Premium per continuare.
-      </p>
-      <div class="flex gap-3 justify-end">
-        <button id="close-limit" class="px-3 py-2 rounded bg-gray-200">Chiudi</button>
-        <a href="/login.html" class="px-3 py-2 rounded bg-blue-600 text-white">Accedi / Registrati</a>
+  <!-- Modale limite: markup vanilla -->
+  <div id="limit-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3>Hai raggiunto il limite gratuito</h3>
+      <p>Hai usato il numero massimo di verifiche per questo mese. Accedi o passa al piano Premium per continuare.</p>
+      <div class="modal-actions">
+        <button id="close-limit" class="btn-gray">Chiudi</button>
+        <a href="/login.html" class="btn-primary">Accedi / Registrati</a>
       </div>
     </div>
   </div>
 
   <!-- Cookie banner -->
   <div id="cookie-banner">
-    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
+    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
     <button onclick="acceptCookies()">Ok</button>
   </div>
 
-  <!-- Analytics solo dopo consenso -->
   <script>
-    function enableAnalytics() {
-      const gtagScript = document.createElement('script');
-      gtagScript.async = true;
-      gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-E5DDHVS0V6";
-      document.head.appendChild(gtagScript);
-      const inlineScript = document.createElement('script');
-      inlineScript.innerHTML = `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-E5DDHVS0V6');
-      `;
-      document.head.appendChild(inlineScript);
+    function enableAnalytics(){
+      const s=document.createElement('script');s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-E5DDHVS0V6";document.head.appendChild(s);
+      const i=document.createElement('script');i.innerHTML=`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-E5DDHVS0V6');`;document.head.appendChild(i);
     }
-    function acceptCookies() {
-      localStorage.setItem('analyticsAccepted', 'true');
-      document.getElementById('cookie-banner').style.display = 'none';
-      enableAnalytics();
-    }
-    window.onload = () => {
-      if (localStorage.getItem('analyticsAccepted') === 'true') {
-        document.getElementById('cookie-banner').style.display = 'none';
-        enableAnalytics();
-      }
-    };
+    function acceptCookies(){localStorage.setItem('analyticsAccepted','true');document.getElementById('cookie-banner').style.display='none';enableAnalytics()}
+    window.onload=()=>{if(localStorage.getItem('analyticsAccepted')==='true'){document.getElementById('cookie-banner').style.display='none';enableAnalytics()}}
   </script>
 
   <script type="module" src="script.js"></script>
 
-  <!-- nav e footer restano SOTTO al box -->
-  <div id="bottom-nav" style="text-align:center; margin-top:1rem;">
+  <div id="bottom-nav">
     <a href="https://stru-menti-app.netlify.app/" title="Home">🏠</a>
     <a href="https://stru-menti-app.netlify.app/tools/bekind/public/index.html" title="Be Kind Tool">🌸</a>
     <a href="https://stru-menti-app.netlify.app/tools/prezzogiusto/public/index.html" title="Prezzo Giusto">💶</a>

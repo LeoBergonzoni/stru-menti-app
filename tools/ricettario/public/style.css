@@ -1,273 +1,96 @@
-/* struttura pagina */
 body {
   font-family: 'Quicksand', sans-serif;
   background-color: #fff8f0;
   color: #4b2e2e;
   margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;  /* così footer/nav restano sotto */
-}
-
-/* wrapper che centra solo il box */
-.page-wrapper {
-  flex: 1;                  /* occupa lo spazio tra header e footer */
-  display: flex;
-  justify-content: center;  /* centro orizzontale */
-  align-items: center;      /* centro verticale */
   padding: 2rem;
 }
 
-/* box centrale */
 .container {
   max-width: 600px;
-  min-width: 320px;
-  min-height: 400px;        /* altezza minima per “cubo” */
-  max-height: 90vh;
+  margin: auto;
   background: #fff3e6;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  overflow-y: auto;         /* scroll interno se il contenuto supera il box */
 }
 
-/* --- il resto del tuo CSS può rimanere identico --- */
+h1 { text-align: center; color: #e57f3a; }
 
-h1 {
-  text-align: center;
-  color: #e57f3a;
-}
+.description { text-align: center; margin-bottom: 1.5rem; }
 
-.description {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+form { display: flex; flex-direction: column; gap: 1rem; }
 
 #ingredient-fields input {
-  display: block;
-  width: 100%;
-  padding: 0.6rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #e0b396;
-  border-radius: 8px;
-  font-size: 16px; /* evita zoom su iOS */
+  display: block; width: 100%; padding: 0.6rem; margin-bottom: 0.5rem;
+  border: 1px solid #e0b396; border-radius: 8px; font-size: 16px;
 }
 
-select, button {
-  padding: 0.7rem;
-  border-radius: 8px;
-  border: none;
-  font-size: 16px; /* evita zoom su iOS */
-}
+select, button { padding: 0.7rem; border-radius: 8px; border: none; font-size: 16px; }
 
 #add-ingredient {
-  align-self: start;
-  background-color: #ffddb0;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  cursor: pointer;
+  align-self: start; background-color: #ffddb0; border: none;
+  padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
 }
 
-#generate-recipe {
-  background-color: #e57f3a;
-  color: white;
-  cursor: pointer;
-  margin-top: 1rem;
-}
+#generate-recipe { background-color: #e57f3a; color: #fff; cursor: pointer; margin-top: 1rem; }
 
 #recipe-output {
-  margin-top: 2rem;
-  background: #fff;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px dashed #e57f3a;
-  animation: fadeIn 0.6s ease-in-out;
+  margin-top: 2rem; background: #fff; padding: 1.5rem; border-radius: 1rem;
+  border: 1px dashed #e57f3a; animation: fadeIn .6s ease-in-out;
+}
+#recipe-output h2 { color: #e57f3a; font-size: 1.4rem; margin-bottom: 1rem; }
+
+.actions { margin-top: 1rem; display: flex; gap: 1rem; }
+.actions button { background-color: #f0c28b; color: #4b2e2e; cursor: pointer; flex: 1; font-size: 16px; }
+
+.ingredient-buttons { display: flex; gap: .5rem; margin-bottom: 1rem; }
+
+.hidden { display: none; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* Smartphone */
+@media (max-width: 480px){
+  body{ padding:1rem; }
+  .container{ padding:1.5rem; }
+  input, select, button{ width:100%; box-sizing:border-box; }
+  .ingredient-buttons{ flex-direction: row; justify-content: space-between; }
+  .actions{ flex-direction: column; }
+  .actions button{ width:100%; }
 }
 
-#recipe-output h2 {
-  color: #e57f3a;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-}
+/* Bottom nav trasparente */
+#bottom-nav { margin-top: 2rem; display:flex; justify-content:center; gap:1.5rem; font-size:1.5rem; opacity:.6; }
+#bottom-nav a { text-decoration:none; background:transparent; border:none; cursor:pointer; font-size:1.5rem; transition:opacity .3s; }
+#bottom-nav a:hover { opacity:1; }
 
-.actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-}
-
-.actions button {
-  background-color: #f0c28b;
-  color: #4b2e2e;
-  cursor: pointer;
-  flex: 1;
-  font-size: 16px;
-}
-
-.ingredient-buttons {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.hidden {
-  display: none;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 📱 Responsive per smartphone */
-@media (max-width: 480px) {
-  body {
-    padding: 1rem;
-  }
-
-  .container {
-    padding: 1.5rem;
-  }
-
-  input, select, button {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .ingredient-buttons {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  .actions button {
-    width: 100%;
-  }
-}
-
-/* Cookie banner responsive */
-#cookie-banner {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: #fff3e6;
-  color: #4b2e2e;
-  padding: 0.8rem 1rem;
-  font-size: 0.85rem;
-  text-align: center;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-#cookie-banner button {
-  background-color: #e57f3a;
-  color: white;
-  border: none;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-/* Migliora layout su schermi larghi */
-@media (min-width: 500px) {
-  #cookie-banner {
-    flex-direction: row;
-    justify-content: center;
-  }
-
-  #cookie-banner button {
-    margin-left: 1rem;
-  }
-}
+/* Footer */
 footer {
-  text-align: center;
-  font-size: 0.75rem;
-  color: #a47b63;
-  margin: 2rem auto 1rem;
-  max-width: 600px;
-  padding: 0 1rem;
+  text-align: center; font-size: .75rem; color: #a47b63;
+  margin: 2rem auto 1rem; max-width: 600px; padding: 0 1rem;
 }
+@media (max-width: 480px){ footer{ font-size:.7rem } }
 
-@media (max-width: 480px) {
-  footer {
-    font-size: 0.7rem;
-  }
+/* ====== MODALE (vanilla) ====== */
+.modal-overlay{
+  position: fixed; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.6); padding: 16px; z-index: 2000;
 }
+.modal-overlay.active{ display:flex; }
 
-/* Overlay modale Ricettario (indipendente da Tailwind) */
-#popup-modal {
-  position: fixed;       /* overlay a schermo intero */
-  inset: 0;              /* top:0; right:0; bottom:0; left:0 */
-  display: none;         /* di default nascosto */
-  align-items: center;   /* centratura contenuto */
-  justify-content: center;
-  background: rgba(0,0,0,0.7);  /* backdrop scuro */
-  z-index: 2000;         /* sopra cookie banner (1000) */
-  padding: 16px;
+.modal-card{
+  max-width: 28rem; width: 100%;
+  background: #fff; color: #1f2937;
+  border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  padding: 20px; text-align: left;
 }
-#popup-modal.active { display: flex; }
+.modal-card h3{ margin:0 0 .5rem; font-size:1.1rem; }
+.modal-card p{ margin:0 0 1rem; font-size:.95rem; }
+.modal-actions{ display:flex; gap:.6rem; justify-content:flex-end; }
+.btn-gray{ background:#e5e7eb; border-radius:8px; padding:.5rem .8rem; }
+.btn-primary{ background:#2563eb; color:#fff; border-radius:8px; padding:.5rem .8rem; text-decoration:none; }
 
-/* “card” interna del modale */
-#popup-modal .modal-card {
-  max-width: 420px;
-  width: 100%;
-  background: #ffffff;
-  color: #333;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  padding: 20px;
-  text-align: center;
-}
-#popup-modal .modal-card h2 { margin: 0 0 10px; }
-#popup-modal .modal-card a,
-#popup-modal .modal-card button {
-  display: inline-block;
-  margin-top: 10px;
-}
-
-#popup-modal, #limit-modal { display: none; }      /* default nascosto */
-#popup-modal.active, #limit-modal.active { display: flex; }  /* mostra + centra */
-
-/* Assicurati che il modale Ricettario sia sopra al cookie banner */
-#limit-modal { z-index: 2000; }
-
-/* Overlay full‑screen del modale (senza Tailwind) */
-#limit-modal {
-  position: fixed;
-  inset: 0;
-  display: none;              /* verrà messo a flex con .active */
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.6);
-  padding: 16px;
-  z-index: 2000;              /* sopra al cookie banner (1000) */
-}
-#limit-modal.active { display: flex; }
-
-/* Card interna (equivalente a: max-w-md w-full bg-white rounded shadow p-5) */
-#limit-modal > div {
-  max-width: 28rem;           /* ~ max-w-md */
-  width: 100%;
-  background: #ffffff;
-  color: #1f2937;             /* testo scuro */
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  padding: 20px;
-}
+/* (facoltativo) assicura che il cookie banner non copra il modale */
+#limit-modal{ z-index:2000; }
