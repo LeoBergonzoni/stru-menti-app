@@ -122,15 +122,19 @@
     </div>
   </div>
 
-  <!-- Modale blocco click -->
-  <div id="popup-modal" class="hidden">
-    <div class="modal-card">
-      <h2 class="text-xl font-bold mb-4">Limite raggiunto</h2>
-      <p class="mb-4">Hai raggiunto il limite massimo di click per questo mese.</p>
-      <a href="/login.html" class="bg-purple-700 text-white px-4 py-2 rounded">Accedi o Registrati</a>
-      <button id="close-modal" class="block mt-4 text-gray-600 underline">Chiudi</button>
+<!-- Modale blocco click -->
+<div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
+  <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
+    <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
+    <p class="text-sm mb-4">
+      Hai usato il numero massimo di verifiche per questo mese. Accedi o passa al piano Premium per continuare.
+    </p>
+    <div class="flex gap-3 justify-end">
+      <button id="close-limit" class="px-3 py-2 rounded bg-gray-200">Chiudi</button>
+      <a href="/login.html" class="px-3 py-2 rounded bg-blue-600 text-white">Accedi / Registrati</a>
     </div>
   </div>
+</div>
 
   <!-- Cookie banner -->
   <div id="cookie-banner">

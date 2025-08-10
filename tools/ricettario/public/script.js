@@ -31,8 +31,8 @@ const recipeTitle = document.querySelector("#recipe-output h2");
 const recipeText = document.getElementById("recipe-text");
 const newRecipeBtn = document.getElementById("new-recipe");
 const copyBtn = document.getElementById("copy-recipe");
-const modal = document.getElementById("popup-modal");
-const modalClose = document.getElementById("close-modal");
+const modal = document.getElementById("limit-modal");
+const modalClose = document.getElementById("close-limit");
 
 // Contatore visibile in fondo
 const counterDiv = document.createElement("div");

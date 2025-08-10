@@ -21,21 +21,15 @@ const beKindBtn = document.getElementById('beKindBtn');
 const responseText = document.getElementById('responseText');
 const outputContainer = document.getElementById('outputContainer');
 
-// Modale limite
-const limitModal =
-  document.getElementById('limit-modal') ||
-  document.getElementById('popup-modal');
+// Modale limite (identico a Prezzo Giusto)
+const limitModal = document.getElementById('limit-modal');
 const closeLimit = document.getElementById('close-limit');
 
-// Contatore in fondo alla pagina
+// Contatore
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:2rem; font-size:0.85rem; color:#888;";
 const footer = document.querySelector("footer");
-if (footer) {
-  document.body.insertBefore(counterDiv, footer);
-} else {
-  document.body.appendChild(counterDiv);
-}
+if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
 let user = null;
 let userPlan = "Anonimo";
@@ -80,7 +74,6 @@ onAuthStateChanged(auth, async (currentUser) => {
     const nowMonth = getCurrentMonthKey();
     monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
   }
-
   updateCounter();
 });
 

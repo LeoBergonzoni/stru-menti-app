@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Con la gentilezza si ottiene tutto</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+
+  <!-- Tailwind per avere il popup identico a Prezzo Giusto -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -44,6 +48,7 @@
     }
     .copy-btn:hover { background-color: #efc7d5; }
     #responseText { white-space: pre-wrap; }
+
     .cookie-banner {
       position: fixed; bottom: 0; left: 0; width: 100%;
       background-color: #e6f2f0; color: #333; font-size: 0.9rem;
@@ -54,6 +59,7 @@
       border: none; padding: 0.4rem 0.8rem;
       border-radius: 6px; cursor: pointer;
     }
+
     .site-footer {
       margin-top: 4rem; text-align: center;
       font-size: 0.8rem; color: #888;
@@ -69,14 +75,15 @@
       transition: opacity 0.3s;
     }
     #bottom-nav a:hover { opacity: 1; }
+
     #click-counter {
       text-align:center; margin-top:1rem;
       font-size:0.85rem; color:#888;
     }
 
-    /* Modale limite */
-    #popup-modal, #limit-modal { display: none; }      /* default nascosto */
-    #popup-modal.active, #limit-modal.active { display: flex; }  /* mostra + centra */
+    /* Mostra/nascondi modale */
+    #limit-modal { display: none; }
+    #limit-modal.active { display: flex; }
   </style>
 </head>
 <body>
@@ -106,8 +113,8 @@
     <button onclick="acceptCookies()">Ok</button>
   </div>
 
-  <!-- Modale limite -->
-  <div id="popup-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4" style="z-index:9999;">
+  <!-- Modale limite (identico a Prezzo Giusto) -->
+  <div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
     <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
       <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
       <p class="text-sm mb-4">
