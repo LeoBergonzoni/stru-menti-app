@@ -192,3 +192,6 @@ footer {
     font-size: 0.7rem;
   }
 }
+
+#popup-modal, #limit-modal { display: none; }      /* default nascosto */
+#popup-modal.active, #limit-modal.active { display: flex; }  /* mostra + centra */

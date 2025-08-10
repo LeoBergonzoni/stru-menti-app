@@ -1,8 +1,8 @@
 // signup.js
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
   getAuth,
+  onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider
@@ -13,7 +13,6 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// Configurazione Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
   authDomain: "stru-menti.firebaseapp.com",
@@ -28,63 +27,82 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Registrazione classica
 const signupForm = document.getElementById("signup-form");
+const googleSignupBtn = document.getElementById("google-signup");
 
+function goHome() {
+  // Redirect diretto senza tenere la pagina di signup nello history
+  window.location.replace("index.html");
+}
+
+function setLoading(isLoading) {
+  const btns = signupForm.querySelectorAll("button");
+  btns.forEach(b => (b.disabled = isLoading));
+}
+
+// ✅ Se sei già autenticato, vai subito in home
+onAuthStateChanged(auth, (u) => {
+  if (u) goHome();
+});
+
+// Registrazione email/password
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = signupForm.email.value;
+  const email = signupForm.email.value.trim();
   const password = signupForm.password.value;
   const confirmPassword = signupForm.confirmPassword.value;
-  const firstName = signupForm.firstName.value;
-  const lastName = signupForm.lastName.value;
+  const firstName = signupForm.firstName.value.trim();
+  const lastName = signupForm.lastName.value.trim();
 
   if (password !== confirmPassword) {
     alert("Le password non coincidono.");
     return;
   }
 
+  setLoading(true);
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-    await setDoc(doc(db, "users", cred.user.uid), {
+    await setDoc(doc(db, "users", user.uid), {
       firstName,
       lastName,
       email,
-      createdAt: new Date()
-    });
+      createdAt: new Date().toISOString(),
+      plan: "free-logged"
+    }, { merge: true });
 
-    alert("Registrazione riuscita! Redirect in corso...");
-    window.location.href = "index.html";
+    goHome();
   } catch (error) {
     console.error("Errore durante la registrazione:", error);
-    alert("Errore: " + error.message);
+    alert("Errore: " + (error?.message || "impossibile registrarsi"));
+  } finally {
+    setLoading(false);
   }
 });
 
-// Registrazione con Google
-const googleSignupBtn = document.getElementById("google-signup");
-
+// Registrazione / accesso con Google
 googleSignupBtn.addEventListener("click", async () => {
+  setLoading(true);
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    const { user } = await signInWithPopup(auth, provider);
 
     const fullName = user.displayName || "";
-    const [firstName, lastName] = fullName.split(" ");
+    const [firstName = "", lastName = ""] = fullName.split(" ");
 
     await setDoc(doc(db, "users", user.uid), {
-      firstName: firstName || "",
-      lastName: lastName || "",
+      firstName,
+      lastName,
       email: user.email,
-      createdAt: new Date()
+      createdAt: new Date().toISOString(),
+      plan: "free-logged"
     }, { merge: true });
 
-    alert("Accesso con Google riuscito! Redirect in corso...");
-    window.location.href = "index.html";
+    goHome();
   } catch (error) {
     console.error("Errore con Google:", error);
-    alert("Errore: " + error.message);
+    alert("Errore: " + (error?.message || "impossibile registrarsi con Google"));
+  } finally {
+    setLoading(false);
   }
 });
