@@ -10,7 +10,7 @@
 
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
-  <!-- ✅ Tailwind per popup identico a Prezzo Giusto -->
+  <!-- Tailwind solo per lo stile del popup -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
   <style>
@@ -43,53 +43,53 @@
       #cookie-banner { flex-direction: row; justify-content: center; align-items: center; }
       #cookie-banner button { margin-left: 1rem; margin-top: 0; }
     }
-    #bottom-nav { margin-top: 2rem; display: flex; justify-content: center; gap: 1.5rem; font-size: 1.5rem; opacity: 0.6; }
-    #bottom-nav a { text-decoration: none; background: transparent; border: none; cursor: pointer; font-size: 1.5rem; transition: opacity 0.3s; }
-    #bottom-nav a:hover { opacity: 1; }
 
-    /* Mostra/nascondi modale (copriamo anche l'id vecchio per sicurezza) */
+    /* mostra/nascondi modale */
     #popup-modal, #limit-modal { display: none; }
     #popup-modal.active, #limit-modal.active { display: flex; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🍝 Il Ricettario</h1>
-    <p class="description">
-      Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
-    </p>
+  <!-- wrapper che centra SOLO il box -->
+  <div class="page-wrapper">
+    <div class="container">
+      <h1>🍝 Il Ricettario</h1>
+      <p class="description">
+        Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
+      </p>
 
-    <form id="ingredients-form">
-      <div id="ingredient-fields">
-        <input type="text" name="ingredient" placeholder="Ingrediente 1" required />
-        <input type="text" name="ingredient" placeholder="Ingrediente 2" required />
-      </div>
+      <form id="ingredients-form">
+        <div id="ingredient-fields">
+          <input type="text" name="ingredient" placeholder="Ingrediente 1" required />
+          <input type="text" name="ingredient" placeholder="Ingrediente 2" required />
+        </div>
 
-      <div class="ingredient-buttons">
-        <button type="button" id="add-ingredient">➕</button>
-        <button type="button" id="remove-ingredient">➖</button>
-      </div>
+        <div class="ingredient-buttons">
+          <button type="button" id="add-ingredient">➕</button>
+          <button type="button" id="remove-ingredient">➖</button>
+        </div>
 
-      <label for="location">Dove la mangi?</label>
-      <select id="location" required>
-        <option value="a casa (calda)">A casa (calda)</option>
-        <option value="da portare in ufficio">Da portare in ufficio</option>
-      </select>
+        <label for="location">Dove la mangi?</label>
+        <select id="location" required>
+          <option value="a casa (calda)">A casa (calda)</option>
+          <option value="da portare in ufficio">Da portare in ufficio</option>
+        </select>
 
-      <button type="submit" id="generate-recipe">🍳 Prepara</button>
-    </form>
+        <button type="submit" id="generate-recipe">🍳 Prepara</button>
+      </form>
 
-    <div id="recipe-output" class="hidden">
-      <h2></h2>
-      <div id="recipe-text"></div>
-      <div class="actions">
-        <button id="new-recipe">🔁 Nuova ricetta</button>
-        <button id="copy-recipe">📋 Copia</button>
+      <div id="recipe-output" class="hidden">
+        <h2></h2>
+        <div id="recipe-text"></div>
+        <div class="actions">
+          <button id="new-recipe">🔁 Nuova ricetta</button>
+          <button id="copy-recipe">📋 Copia</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Modale blocco click – identico a Prezzo Giusto -->
+  <!-- Modale blocco click (identico a Prezzo Giusto) -->
   <div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4 z-50">
     <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
       <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
@@ -140,7 +140,8 @@
 
   <script type="module" src="script.js"></script>
 
-  <div id="bottom-nav">
+  <!-- nav e footer restano SOTTO al box -->
+  <div id="bottom-nav" style="text-align:center; margin-top:1rem;">
     <a href="https://stru-menti-app.netlify.app/" title="Home">🏠</a>
     <a href="https://stru-menti-app.netlify.app/tools/bekind/public/index.html" title="Be Kind Tool">🌸</a>
     <a href="https://stru-menti-app.netlify.app/tools/prezzogiusto/public/index.html" title="Prezzo Giusto">💶</a>
