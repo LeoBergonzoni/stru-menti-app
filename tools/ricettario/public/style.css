@@ -3,16 +3,24 @@ body {
   background-color: #fff8f0;
   color: #4b2e2e;
   margin: 0;
+  min-height: 100vh;           /* occupa sempre l'intera viewport */
+  display: flex;               /* per centrare la cornice */
+  justify-content: center;     /* centratura orizzontale */
+  align-items: center;         /* centratura verticale */
   padding: 2rem;
 }
 
 .container {
   max-width: 600px;
+  min-width: 320px;
+  min-height: 400px;           /* altezza minima */
+  max-height: 90vh;            /* non uscire dalla finestra */
   margin: auto;
   background: #fff3e6;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  overflow-y: auto;            /* scroll interno se il contenuto è troppo */
 }
 
 h1 {
