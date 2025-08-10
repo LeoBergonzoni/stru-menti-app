@@ -96,7 +96,7 @@ addButton.addEventListener("click", () => {
     input.type = "text";
     input.name = "ingredient";
     input.placeholder = `Ingrediente ${currentInputs + 1}`;
-    // input.required = true; // se vuoi obbligatori, riattiva
+    // input.required = true; // se li vuoi obbligatori riattiva
     ingredientContainer.appendChild(input);
   }
 });
