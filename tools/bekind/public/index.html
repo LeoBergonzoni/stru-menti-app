@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Con la gentilezza si ottiene tutto</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
-  <script type="module" src="firebase-script.js"></script>
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -74,6 +73,10 @@
       text-align:center; margin-top:1rem;
       font-size:0.85rem; color:#888;
     }
+
+    /* Modale limite */
+    #limit-modal { display: none; }
+    #limit-modal.active { display: flex; }
   </style>
 </head>
 <body>
@@ -97,9 +100,24 @@
 
   <div id="click-counter"></div>
 
+  <!-- Cookie -->
   <div class="cookie-banner" id="cookieBanner" style="display: none;">
     Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
     <button onclick="acceptCookies()">Ok</button>
+  </div>
+
+  <!-- Modale limite -->
+  <div id="limit-modal" class="hidden fixed inset-0 items-center justify-center bg-black bg-opacity-60 p-4" style="z-index:9999;">
+    <div class="max-w-md w-full bg-white text-gray-800 rounded-lg shadow-lg p-5">
+      <h3 class="text-lg font-semibold mb-2">Hai raggiunto il limite gratuito</h3>
+      <p class="text-sm mb-4">
+        Hai usato il numero massimo di riformulazioni per questo mese. Accedi o passa al piano Premium per continuare.
+      </p>
+      <div class="flex gap-3 justify-end">
+        <button id="close-limit" class="px-3 py-2 rounded bg-gray-200">Chiudi</button>
+        <a href="/login.html" class="px-3 py-2 rounded bg-blue-600 text-white">Accedi / Registrati</a>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -114,6 +132,7 @@
     };
   </script>
 
+  <!-- TUTTO in script.js (module) -->
   <script src="script.js" type="module"></script>
 
   <div id="bottom-nav">

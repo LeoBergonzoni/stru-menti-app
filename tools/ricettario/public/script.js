@@ -37,15 +37,21 @@ const modalClose = document.getElementById("close-modal");
 // Contatore visibile in fondo
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85rem; color:#888;";
-document.body.insertBefore(counterDiv, document.querySelector("footer"));
+const footer = document.querySelector("footer");
+if (footer) {
+  document.body.insertBefore(counterDiv, footer);
+} else {
+  document.body.appendChild(counterDiv);
+}
 
 let user = null;
-let userPlan = "anonymous";
+let userPlan = "Anonimo";
 let monthlyClicks = 0;
-let maxClicks = 15;
+let maxClicks = 5;
 
 const getCurrentMonthKey = () => {
   const now = new Date();
+  // mese 1-12
   return `${now.getFullYear()}-${now.getMonth() + 1}`;
 };
 
@@ -56,9 +62,10 @@ function updateCounter() {
 onAuthStateChanged(auth, async (currentUser) => {
   if (currentUser) {
     user = currentUser;
+
+    // Piano utente
     const userDocRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userDocRef);
-
     if (userSnap.exists()) {
       const userData = userSnap.data();
       userPlan = userData.plan || "free-logged";
@@ -66,6 +73,7 @@ onAuthStateChanged(auth, async (currentUser) => {
 
     maxClicks = userPlan === "premium" ? 300 : 30;
 
+    // Click mensili
     const clickRef = doc(db, "clicks", user.uid);
     const clickSnap = await getDoc(clickRef);
     const monthKey = getCurrentMonthKey();
@@ -74,25 +82,20 @@ onAuthStateChanged(auth, async (currentUser) => {
       await setDoc(clickRef, { [monthKey]: 0 });
       monthlyClicks = 0;
     } else {
-      monthlyClicks = clickSnap.data()[monthKey] || 0;
+      monthlyClicks = clickSnap.data()?.[monthKey] ?? 0;
     }
   } else {
     // Anonimo
     user = null;
     userPlan = "Anonimo";
-    maxClicks = 15;
+    maxClicks = 5;
+
     const storedClicks = localStorage.getItem("anonClicks");
     const storedMonth = localStorage.getItem("anonMonth");
     const nowMonth = getCurrentMonthKey();
+
     monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
   }
-
-  if (monthlyClicks >= maxClicks) {
-    alert("Hai raggiunto il numero massimo di utilizzi mensili per utenti anonimi. Per continuare, effettua il login.");
-    window.location.href = "/login.html";
-    return;
-  }
-
 
   updateCounter();
 });
@@ -104,7 +107,8 @@ addButton.addEventListener("click", () => {
     input.type = "text";
     input.name = "ingredient";
     input.placeholder = `Ingrediente ${currentInputs + 1}`;
-    input.required = true;
+    // Facoltativo: lasciamo i campi extra non obbligatori
+    // input.required = true;
     ingredientContainer.appendChild(input);
   }
 });
@@ -120,6 +124,7 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   if (monthlyClicks >= maxClicks) {
+    modal.classList.add("active");
     modal.classList.remove("hidden");
     return;
   }
@@ -134,27 +139,48 @@ form.addEventListener("submit", async (e) => {
   recipeTitle.textContent = "";
   recipeOutput.classList.remove("hidden");
 
-  const recipe = await fetchRecipe(ingredients, location);
-  const [titleLine, ...rest] = recipe.split('\n');
-  const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').trim();
-  const body = rest.join('\n').trim();
+  // Disabilita pulsanti finché attendiamo la risposta
+  const prevStates = {
+    add: addButton.disabled,
+    remove: removeButton.disabled,
+    newBtn: newRecipeBtn.disabled
+  };
+  addButton.disabled = true;
+  removeButton.disabled = true;
+  newRecipeBtn.disabled = true;
 
-  recipeTitle.textContent = `🍽️ ${cleanTitle}`;
-  recipeText.textContent = body;
+  try {
+    const recipe = await fetchRecipe(ingredients, location);
+    const [titleLine, ...rest] = recipe.split('\n');
+    const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').trim();
+    const body = rest.join('\n').trim();
 
-  // Aggiorna conteggio
-  monthlyClicks++;
+    recipeTitle.textContent = `🍽️ ${cleanTitle}`;
+    recipeText.textContent = body;
 
-  if (user) {
-    const monthKey = getCurrentMonthKey();
-    const clickRef = doc(db, "clicks", user.uid);
-    await updateDoc(clickRef, { [monthKey]: increment(1) });
-  } else {
-    localStorage.setItem("anonClicks", monthlyClicks);
-    localStorage.setItem("anonMonth", getCurrentMonthKey());
+    // Aggiorna conteggio SOLO dopo risposta OK
+    monthlyClicks++;
+
+    if (user) {
+      const monthKey = getCurrentMonthKey();
+      const clickRef = doc(db, "clicks", user.uid);
+      await updateDoc(clickRef, { [monthKey]: increment(1) });
+    } else {
+      localStorage.setItem("anonClicks", monthlyClicks);
+      localStorage.setItem("anonMonth", getCurrentMonthKey());
+    }
+
+    updateCounter();
+  } catch (err) {
+    recipeOutput.classList.add("hidden");
+    alert("Si è verificato un errore. Riprova tra poco.");
+    console.error(err);
+  } finally {
+    // Ripristina stato pulsanti
+    addButton.disabled = prevStates.add;
+    removeButton.disabled = prevStates.remove;
+    newRecipeBtn.disabled = prevStates.newBtn;
   }
-
-  updateCounter(); // aggiorna subito il testo visibile
 });
 
 newRecipeBtn.addEventListener("click", () => {
@@ -169,17 +195,19 @@ copyBtn.addEventListener("click", () => {
 
 // Modale
 modalClose.addEventListener("click", () => {
+  modal.classList.remove("active");
   modal.classList.add("hidden");
 });
 
-// Funzione API
+// Funzione API con gestione errori HTTP
 async function fetchRecipe(ingredients, location) {
-  const response = await fetch("/.netlify/functions/ricettario-chatgpt", {
+  const res = await fetch("/.netlify/functions/ricettario-chatgpt", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ingredients, location })
   });
-
-  const data = await response.json();
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const data = await res.json();
+  if (!data?.message) throw new Error("Risposta API non valida");
   return data.message;
 }

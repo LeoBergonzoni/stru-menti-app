@@ -1,16 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  increment
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -30,18 +20,25 @@ const db = getFirestore(app);
 const beKindBtn = document.getElementById('beKindBtn');
 const responseText = document.getElementById('responseText');
 const outputContainer = document.getElementById('outputContainer');
-const modal = document.getElementById('popup-modal');
-const modalClose = document.getElementById('close-modal');
+
+// Modale limite
+const limitModal = document.getElementById('limit-modal');
+const closeLimit = document.getElementById('close-limit');
 
 // Contatore in fondo alla pagina
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:2rem; font-size:0.85rem; color:#888;";
-document.body.insertBefore(counterDiv, document.querySelector("footer"));
+const footer = document.querySelector("footer");
+if (footer) {
+  document.body.insertBefore(counterDiv, footer);
+} else {
+  document.body.appendChild(counterDiv);
+}
 
 let user = null;
 let userPlan = "Anonimo";
 let monthlyClicks = 0;
-let maxClicks = 15;
+let maxClicks = 5;
 
 const getCurrentMonthKey = () => {
   const now = new Date();
@@ -70,12 +67,12 @@ onAuthStateChanged(auth, async (currentUser) => {
       await setDoc(clickRef, { [monthKey]: 0 });
       monthlyClicks = 0;
     } else {
-      monthlyClicks = clickSnap.data()[monthKey] || 0;
+      monthlyClicks = clickSnap.data()?.[monthKey] ?? 0;
     }
   } else {
     user = null;
     userPlan = "Anonimo";
-    maxClicks = 15;
+    maxClicks = 5;
     const storedClicks = localStorage.getItem("anonBeKindClicks");
     const storedMonth = localStorage.getItem("anonBeKindMonth");
     const nowMonth = getCurrentMonthKey();
@@ -85,16 +82,27 @@ onAuthStateChanged(auth, async (currentUser) => {
   updateCounter();
 });
 
+closeLimit?.addEventListener("click", () => {
+  limitModal.classList.remove("active");
+  limitModal.classList.add("hidden");
+});
+
 beKindBtn.addEventListener("click", async () => {
   const userInput = document.getElementById('userInput').value.trim();
   if (!userInput) return alert("Scrivi prima una frase!");
 
   if (monthlyClicks >= maxClicks) {
-    alert("Hai raggiunto il limite mensile. Accedi o passa a Premium per più utilizzi!");
+    // Mostra modale, niente redirect
+    limitModal.classList.add("active");
+    limitModal.classList.remove("hidden");
     return;
   }
 
   const prompt = `Riformula questa frase: "${userInput}" in maniera gentile, corretta e professionale, in modo che chi la legge sia invogliato ad essere d’accordo con te.`;
+
+  // Disabilita bottone durante la richiesta
+  const prevDisabled = beKindBtn.disabled;
+  beKindBtn.disabled = true;
 
   try {
     const res = await fetch("/.netlify/functions/bekind-rewrite", {
@@ -102,25 +110,33 @@ beKindBtn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt })
     });
+
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
-    responseText.textContent = data.result || "🤖 L'AI non ha generato una risposta. Riprova con una frase più chiara.";
+    if (!data?.result) throw new Error("Risposta AI non valida");
+
+    responseText.textContent = data.result;
     outputContainer.style.display = 'block';
+
+    // ✅ Incrementa SOLO dopo risposta OK
+    monthlyClicks++;
+    if (user) {
+      const monthKey = getCurrentMonthKey();
+      const clickRef = doc(db, "clicks", user.uid);
+      await updateDoc(clickRef, { [monthKey]: increment(1) });
+    } else {
+      localStorage.setItem("anonBeKindClicks", monthlyClicks);
+      localStorage.setItem("anonBeKindMonth", getCurrentMonthKey());
+    }
+    updateCounter();
+
   } catch (error) {
-    responseText.textContent = "Errore nella comunicazione con l’intelligenza artificiale.";
+    responseText.textContent = "Errore nella comunicazione con l’AI: " + error.message;
     outputContainer.style.display = 'block';
+    // ❌ niente incremento in caso d’errore
+  } finally {
+    beKindBtn.disabled = prevDisabled;
   }
-
-  monthlyClicks++;
-  if (user) {
-    const monthKey = getCurrentMonthKey();
-    const clickRef = doc(db, "clicks", user.uid);
-    await updateDoc(clickRef, { [monthKey]: increment(1) });
-  } else {
-    localStorage.setItem("anonBeKindClicks", monthlyClicks);
-    localStorage.setItem("anonBeKindMonth", getCurrentMonthKey());
-  }
-
-  updateCounter();
 });
 
 window.copyText = function () {
