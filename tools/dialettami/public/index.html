@@ -5,169 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dialettami</title>
   <meta name="description" content="Traduci frasi tra Italiano e i dialetti italiani con l'aiuto dell'AI." />
-  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="50" font-size="52">🇮🇹</text></svg>'>
-  <script defer src="script.js" type="module"></script>
-
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GQBTEG460W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-GQBTEG460W');
-  </script>
+<link rel="icon"
+      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="50" font-size="52">🇮🇹</text></svg>'>
 
   <style>
-    :root {
+    :root{
       --bg:#f7f9fb;
       --card:#ffffff;
       --text:#1f2937;
       --muted:#6b7280;
-      --primary:#2e7d32;
-      --accent:#d32f2f;
-      --accent-2:#1e88e5;
+      --primary:#2e7d32; /* verde soft */
+      --accent:#d32f2f;  /* rosso soft */
+      --accent-2:#1e88e5; /* azzurrino per focus */
       --italy: linear-gradient(90deg, #2e7d32 0 33%, #ffffff 33% 66%, #d32f2f 66%);
       --radius:16px;
       --shadow: 0 8px 24px rgba(0,0,0,.08);
     }
-    * { box-sizing:border-box }
-    html, body {
-      margin:0; padding:0;
-      background:var(--bg); color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";}
+    a{color:inherit}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    header{
+      display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0 20px 0;
     }
-    a { color: inherit }
-    .wrap { max-width:900px; margin:0 auto; padding:20px }
-    header {
-      display:flex; align-items:center; justify-content:center; gap:12px; margin:12px 0 20px 0;
+    .flag{
+      width:28px;height:18px;border-radius:3px;background:var(--italy);box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
     }
-    .flag {
-      width:28px; height:18px; border-radius:3px;
-      background:var(--italy); box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
+    h1{font-size:clamp(26px,4vw,36px);margin:0;font-weight:800;letter-spacing:.2px}
+    .card{
+      background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;
     }
-    h1 {
-      font-size:clamp(26px,4vw,36px);
-      margin:0; font-weight:800; letter-spacing:.2px;
+    .row{display:flex;flex-wrap:wrap;gap:12px}
+    .col{flex:1 1 260px}
+    label{display:block;font-weight:600;margin:6px 0 8px;color:#0f172a}
+    .muted{color:var(--muted);font-size:.95rem}
+    textarea, select, input[type="text"]{
+      font-size: 16px;
+      width:100%;padding:14px 14px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;color:var(--text);
+      outline: none;
     }
-    .card {
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
+    textarea{min-height:120px;resize:vertical;line-height:1.4}
+    select:focus, textarea:focus{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(30,136,229,.15)}
+    .mode-switch{
+      display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px
     }
-    .mode-switch { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px }
-    .pill {
-      border:1px solid #e5e7eb;
-      border-radius:999px;
-      padding:8px 12px;
-      cursor:pointer;
-      background:#fff;
+    .pill{
+      border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;cursor:pointer;background:#fff;
     }
-    .pill input { display:none }
-    .pill.active {
-      border-color:var(--primary);
-      box-shadow:0 2px 0 0 var(--primary) inset;
+    .pill input{display:none}
+    .pill.active{border-color:var(--primary);box-shadow:0 2px 0 0 var(--primary) inset}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      font-weight:800;letter-spacing:.3px;
+      width:100%;padding:14px 18px;border-radius:14px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--primary), #43a047);color:#fff;
+      transition: transform .06s ease, filter .2s ease;
     }
-    textarea, select {
-      width:100%; padding:14px; border-radius:12px;
-      border:1px solid #e5e7eb;
-      font-size:16px;
-      background:#fff;
-      color:var(--text);
-      resize:vertical;
+    .btn:hover{filter:brightness(1.05)}
+    .btn:active{transform:translateY(1px)}
+    .btn .emoji{font-size:1.2rem}
+    .outputs{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+    .out{
+      background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;position:relative;
     }
-    .btn {
-      display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      background:linear-gradient(135deg,var(--primary), #43a047);
-      color:#fff; font-weight:800;
-      width:100%; padding:14px 18px;
-      border:none; border-radius:14px;
-      cursor:pointer;
+    .out h3{margin:0 0 8px 0;font-size:1rem}
+    .copy{
+      position:absolute;top:10px;right:10px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;
     }
-    .btn:hover { filter:brightness(1.05) }
-    .outputs { display:grid; gap:12px; margin-top:14px }
-    .out {
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      padding:14px;
-      position:relative;
+    .footer{margin:24px 0 32px;text-align:center;color:var(--muted);font-size:.9rem}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;
     }
-    .copy {
-      position:absolute; top:10px; right:10px;
-      padding:6px 10px;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      background:#fff;
-      cursor:pointer;
-    }
-    .footer {
-      margin:24px 0 32px;
-      text-align:center;
-      color:var(--muted);
-      font-size:.9rem;
-    }
-    .badge {
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px;
-      border-radius:12px;
-      background:#fff;
-      border:1px solid #e5e7eb;
-    }
-    .muted { color:var(--muted); font-size:.95rem }
-    .dictate-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-    .dictate-btn:hover {
-      background: rgba(0,0,0,0.05);
-    }
-    #popup-modal {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5);
-      display:none; align-items:center; justify-content:center;
-      z-index:1000;
-    }
-    #popup-modal.active { display:flex; }
-    #popup-modal .modal-content {
-      background:#fff; padding:2rem;
-      border-radius:1rem; text-align:center;
-      max-width:90%; box-shadow:var(--shadow);
-    }
-    #cookie-banner {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(255,255,255,0.9);
-      color: #222;
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      border-radius: 0.5rem;
-      z-index: 999; text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    #cookie-banner button {
-      margin-left: 1rem;
-      background: #333;
-      color: white;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.3rem;
-      cursor: pointer;
-    }
-    #counter {
-      margin-top: 1.5rem;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
+    .dialect-select{width:100%}
+    .hidden{display:none!important}
     @media (min-width:720px){
-      .outputs { grid-template-columns:1fr 1fr }
+      .outputs{grid-template-columns:1fr 1fr}
     }
+
+    .dictate-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .dictate-btn:hover {
+    background: rgba(0,0,0,0.05);
+  }
+
   </style>
 </head>
 <body>
@@ -178,33 +106,67 @@
     </header>
 
     <div class="card">
-      <div class="mode-switch">
-        <label class="pill active"><input type="radio" name="mode" value="it_to_dia" checked> 🇮🇹→🗣️ Da Italiano a Dialetto</label>
-        <label class="pill"><input type="radio" name="mode" value="dia_to_it"> 🗣️→🇮🇹 Da Dialetto a Italiano</label>
+      <div class="mode-switch" role="tablist" aria-label="Modalità di traduzione">
+        <label class="pill active" id="mode-it-to-dialetto">
+          <input type="radio" name="mode" value="it_to_dia" checked />
+          🇮🇹→🗣️ Da Italiano a Dialetto
+        </label>
+        <label class="pill" id="mode-dialetto-to-it">
+          <input type="radio" name="mode" value="dia_to_it" />
+          🗣️→🇮🇹 Da Dialetto a Italiano
+        </label>
       </div>
 
-      <label class="muted">Scrivi la frase che vuoi tradurre:</label>
-      <button id="dictateBtn" class="dictate-btn" title="Dettatura vocale">🎙️</button>
-      <textarea id="userInput" placeholder="Es: Oggi è una bella giornata."></textarea>
+      <div id="form-it-to-dia" class="form">
+        <label for="text-it" class="muted">Scrivi o registra qui sotto quello che vuoi tradurre in uno qualsiasi dei dialetti italiani.</label>
+        <button id="dictate" class="dictate-btn" title="Dettatura vocale">🎙️</button>
+        <textarea id="text-it" placeholder="Es. Oggi è una bella giornata"></textarea>
 
-      <label for="dialect" class="muted" style="margin-top:12px;display:block;">Scegli il dialetto</label>
-      <select id="dialect">
-        <optgroup label="Nord Italia">
-          <option>Milanese</option><option>Piemontese</option><option>Bolognese</option><option>Romagnolo</option>
-          <option>Veneto</option><option>Liguriano</option><option>Friulano</option><option>Ladino</option>
-        </optgroup>
-        <optgroup label="Centro Italia">
-          <option>Toscano</option><option>Fiorentino</option><option>Romanesco</option>
-          <option>Dialetti umbri</option><option>Dialetti marchigiani</option><option>Dialetti laziali (non romaneschi)</option>
-        </optgroup>
-        <optgroup label="Sud Italia">
-          <option>Napoletano</option><option>Calabrese di Cosenza</option><option>Calabrese di Catanzaro</option>
-          <option>Salentino</option><option>Pugliese (Apulo)</option>
-        </optgroup>
-        <optgroup label="Isole">
-          <option>Siciliano</option><option>Sardo</option><option>Logudorese</option><option>Campidanese</option>
-        </optgroup>
-      </select>
+        <div class="row" style="margin-top:12px">
+          <div class="col">
+            <label for="dialect">Scegli il dialetto</label>
+            <select id="dialect" class="dialect-select">
+              <optgroup label="Nord Italia">
+                <option>Milanese</option>
+                <option>Piemontese</option>
+                <option>Bolognese</option>
+                <option>Romagnolo</option>
+                <option>Veneto</option>
+                <option>Liguriano</option>
+                <option>Friulano</option>
+                <option>Ladino</option>
+              </optgroup>
+              <optgroup label="Centro Italia">
+                <option>Toscano</option>
+                <option>Fiorentino</option>
+                <option>Romanesco</option>
+                <option>Dialetti umbri</option>
+                <option>Dialetti marchigiani</option>
+                <option>Dialetti laziali (non romaneschi)</option>
+              </optgroup>
+              <optgroup label="Sud Italia">
+                <option>Napoletano</option>
+                <option>Calabrese di Cosenza</option>
+                <option>Calabrese di Catanzaro</option>
+                <option>Salentino</option>
+                <option>Pugliese (Apulo)</option>
+              </optgroup>
+              <optgroup label="Isole">
+                <option>Siciliano</option>
+                <option>Sardo</option>
+                <option>Logudorese</option>
+                <option>Campidanese</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="form-dia-to-it" class="form hidden">
+        <label for="text-dia" class="muted">Scrivi o registra qui sotto quello che vuoi tradurre da un qualsiasi dialetto all’italiano.</label>
+        <button id="dictate" class="dictate-btn" title="Dettatura vocale">🎙️</button>
+        <textarea id="text-dia" placeholder="Es. Che bèla zurnè"></textarea>
+      </div>
 
       <div style="margin-top:16px">
         <button id="btn" class="btn">
@@ -218,19 +180,11 @@
           <button class="copy" data-target="translation">Copia</button>
           <div id="translation" class="muted">La traduzione apparirà qui sotto.</div>
         </div>
+
         <div class="out">
           <h3>Spiegazione</h3>
           <button class="copy" data-target="explanation">Copia</button>
-          <div id="explanation" class="muted">Una breve spiegazione dei termini apparirà qui.</div>
-        </div>
-      </div>
-
-      <div id="counter"></div>
-
-      <div id="popup-modal">
-        <div class="modal-content">
-          <p>Hai raggiunto il limite mensile di utilizzo gratuito.</p>
-          <a href="/login.html" class="btn" style="margin-top:1rem;">Accedi o Registrati</a>
+          <div id="explanation" class="muted">Una breve spiegazione dei singoli termini tradotti apparirà qui.</div>
         </div>
       </div>
 
@@ -242,20 +196,6 @@
     </div>
   </div>
 
-  <div id="cookie-banner">
-    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
-    <button onclick="acceptCookies()">Ok</button>
-  </div>
-  <script>
-    function acceptCookies() {
-      document.getElementById('cookie-banner').style.display = 'none';
-      localStorage.setItem('cookiesAccepted', 'true');
-    }
-    window.onload = () => {
-      if (localStorage.getItem('cookiesAccepted')) {
-        document.getElementById('cookie-banner').style.display = 'none';
-      }
-    };
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
