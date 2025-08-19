@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dialettami</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇮🇹</text></svg>">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <meta name="description" content="Traduci frasi tra Italiano e i dialetti italiani con l'aiuto dell'AI." />
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="50" font-size="52">🇮🇹</text></svg>'>
   <script defer src="script.js" type="module"></script>
 
   <!-- Google Analytics -->
@@ -19,6 +18,120 @@
   </script>
 
   <style>
+    :root {
+      --bg:#f7f9fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2e7d32;
+      --accent:#d32f2f;
+      --accent-2:#1e88e5;
+      --italy: linear-gradient(90deg, #2e7d32 0 33%, #ffffff 33% 66%, #d32f2f 66%);
+      --radius:16px;
+      --shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    * { box-sizing:border-box }
+    html, body {
+      margin:0; padding:0;
+      background:var(--bg); color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    a { color: inherit }
+    .wrap { max-width:900px; margin:0 auto; padding:20px }
+    header {
+      display:flex; align-items:center; justify-content:center; gap:12px; margin:12px 0 20px 0;
+    }
+    .flag {
+      width:28px; height:18px; border-radius:3px;
+      background:var(--italy); box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
+    }
+    h1 {
+      font-size:clamp(26px,4vw,36px);
+      margin:0; font-weight:800; letter-spacing:.2px;
+    }
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .mode-switch { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px }
+    .pill {
+      border:1px solid #e5e7eb;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      background:#fff;
+    }
+    .pill input { display:none }
+    .pill.active {
+      border-color:var(--primary);
+      box-shadow:0 2px 0 0 var(--primary) inset;
+    }
+    textarea, select {
+      width:100%; padding:14px; border-radius:12px;
+      border:1px solid #e5e7eb;
+      font-size:16px;
+      background:#fff;
+      color:var(--text);
+      resize:vertical;
+    }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      background:linear-gradient(135deg,var(--primary), #43a047);
+      color:#fff; font-weight:800;
+      width:100%; padding:14px 18px;
+      border:none; border-radius:14px;
+      cursor:pointer;
+    }
+    .btn:hover { filter:brightness(1.05) }
+    .outputs { display:grid; gap:12px; margin-top:14px }
+    .out {
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:14px;
+      position:relative;
+    }
+    .copy {
+      position:absolute; top:10px; right:10px;
+      padding:6px 10px;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      background:#fff;
+      cursor:pointer;
+    }
+    .footer {
+      margin:24px 0 32px;
+      text-align:center;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .badge {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:12px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+    }
+    .muted { color:var(--muted); font-size:.95rem }
+
+    /* Modale limite click */
+    #popup-modal {
+      position:fixed;
+      top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.5);
+      display:none; align-items:center; justify-content:center;
+      z-index:1000;
+    }
+    #popup-modal.active { display:flex; }
+    #popup-modal .modal-content {
+      background:#fff; padding:2rem;
+      border-radius:1rem; text-align:center;
+      max-width:90%; box-shadow:var(--shadow);
+    }
+
+    /* Cookie banner */
     #cookie-banner {
       position: fixed;
       bottom: 20px;
@@ -42,34 +155,71 @@
       border-radius: 0.3rem;
       cursor: pointer;
     }
+
+    #counter {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    @media (min-width:720px){
+      .outputs { grid-template-columns:1fr 1fr }
+    }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans px-4 py-6">
+<body>
+  <div class="wrap">
+    <header>
+      <div class="flag" aria-hidden="true"></div>
+      <h1>Dialettami</h1>
+    </header>
 
-  <h1 class="text-3xl text-center font-bold mb-4">🗣️ Dialettami</h1>
-  <p class="text-center mb-6">Traduci frasi da italiano a dialetto o viceversa. Scegli la direzione, scrivi la frase e scopri il risultato.</p>
+    <div class="card">
+      <div class="mode-switch">
+        <label class="pill active"><input type="radio" name="mode" value="it_to_dia" checked> 🇮🇹→🗣️ Da Italiano a Dialetto</label>
+        <label class="pill"><input type="radio" name="mode" value="dia_to_it"> 🗣️→🇮🇹 Da Dialetto a Italiano</label>
+      </div>
 
-  <form id="dialect-form" class="max-w-xl mx-auto space-y-4">
-    <div>
-      <select id="mode" class="w-full border rounded p-2">
-        <option value="ita-to-dialetto">🇮🇹 Italiano → 🗣️ Dialetto</option>
-        <option value="dialetto-to-ita">🗣️ Dialetto → 🇮🇹 Italiano</option>
-      </select>
-    </div>
-    <textarea id="userInput" class="w-full p-3 border rounded" placeholder="Scrivi la frase qui..."></textarea>
-    <button type="submit" id="translateBtn" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Traduci</button>
-  </form>
+      <label class="muted">Scrivi la frase che vuoi tradurre:</label>
+      <textarea id="userInput" placeholder="Es: Oggi è una bella giornata."></textarea>
 
-  <div id="result" class="max-w-xl mx-auto mt-6 p-4 rounded bg-white shadow hidden"></div>
+      <div style="margin-top:16px">
+        <button id="btn" class="btn">
+          <span class="emoji">🗺️</span> DIALETTAMI <span class="emoji">🇮🇹</span>
+        </button>
+      </div>
 
-  <!-- Contatore -->
-  <div id="counter" class="text-center mt-6 text-sm text-gray-600"></div>
+      <div class="outputs">
+        <div class="out">
+          <h3>Traduzione</h3>
+          <button class="copy" data-target="translation">Copia</button>
+          <div id="translation" class="muted">La traduzione apparirà qui sotto.</div>
+        </div>
+        <div class="out">
+          <h3>Spiegazione</h3>
+          <button class="copy" data-target="explanation">Copia</button>
+          <div id="explanation" class="muted">Una breve spiegazione dei termini apparirà qui.</div>
+        </div>
+      </div>
 
-  <!-- Modale limite -->
-  <div id="popup-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
-    <div class="bg-white p-6 rounded shadow max-w-sm text-center">
-      <p class="mb-4 text-gray-800">Hai raggiunto il limite mensile di utilizzo.</p>
-      <a href="/login.html" class="bg-blue-600 text-white px-4 py-2 rounded">Accedi o Registrati</a>
+      <!-- Contatore -->
+      <div id="counter"></div>
+
+      <!-- Modale -->
+      <div id="popup-modal">
+        <div class="modal-content">
+          <p>Hai raggiunto il limite mensile di utilizzo gratuito.</p>
+          <a href="/login.html" class="btn" style="margin-top:1rem;">Accedi o Registrati</a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <span class="badge">
+          2025 Dialettami da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI
+        </span>
+      </div>
     </div>
   </div>
 
@@ -78,7 +228,6 @@
     Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
     <button onclick="acceptCookies()">Ok</button>
   </div>
-
   <script>
     function acceptCookies() {
       document.getElementById('cookie-banner').style.display = 'none';
@@ -90,6 +239,5 @@
       }
     };
   </script>
-
 </body>
 </html>
