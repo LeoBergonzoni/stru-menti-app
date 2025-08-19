@@ -66,21 +66,23 @@ body {
   }
   
   .plan-box {
-    background-color: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 1rem 1rem;
-    width: 250px;
+    background-color: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 0.8rem 0.8rem;
+    width: 200px;
     text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 180px;
+    min-height: 140px;
+    opacity: 0.85;
+    font-size: 0.85rem;
   }
   
   .plan-box h4 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
   }
   
   .plan-box.premium {
