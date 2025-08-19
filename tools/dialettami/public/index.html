@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dialettami</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇮🇹</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script defer src="script.js" type="module"></script>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GQBTEG460W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-GQBTEG460W');
+  </script>
+
+  <style>
+    #cookie-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.9);
+      color: #222;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      border-radius: 0.5rem;
+      z-index: 999;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    #cookie-banner button {
+      margin-left: 1rem;
+      background: #333;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.3rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans px-4 py-6">
+
+  <h1 class="text-3xl text-center font-bold mb-4">🗣️ Dialettami</h1>
+  <p class="text-center mb-6">Traduci frasi da italiano a dialetto o viceversa. Scegli la direzione, scrivi la frase e scopri il risultato.</p>
+
+  <form id="dialect-form" class="max-w-xl mx-auto space-y-4">
+    <div>
+      <select id="mode" class="w-full border rounded p-2">
+        <option value="ita-to-dialetto">🇮🇹 Italiano → 🗣️ Dialetto</option>
+        <option value="dialetto-to-ita">🗣️ Dialetto → 🇮🇹 Italiano</option>
+      </select>
+    </div>
+    <textarea id="userInput" class="w-full p-3 border rounded" placeholder="Scrivi la frase qui..."></textarea>
+    <button type="submit" id="translateBtn" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Traduci</button>
+  </form>
+
+  <div id="result" class="max-w-xl mx-auto mt-6 p-4 rounded bg-white shadow hidden"></div>
+
+  <!-- Contatore -->
+  <div id="counter" class="text-center mt-6 text-sm text-gray-600"></div>
+
+  <!-- Modale limite -->
+  <div id="popup-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white p-6 rounded shadow max-w-sm text-center">
+      <p class="mb-4 text-gray-800">Hai raggiunto il limite mensile di utilizzo.</p>
+      <a href="/login.html" class="bg-blue-600 text-white px-4 py-2 rounded">Accedi o Registrati</a>
+    </div>
+  </div>
+
+  <!-- Cookie Banner -->
+  <div id="cookie-banner">
+    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
+    <button onclick="acceptCookies()">Ok</button>
+  </div>
+
+  <script>
+    function acceptCookies() {
+      document.getElementById('cookie-banner').style.display = 'none';
+      localStorage.setItem('cookiesAccepted', 'true');
+    }
+    window.onload = () => {
+      if (localStorage.getItem('cookiesAccepted')) {
+        document.getElementById('cookie-banner').style.display = 'none';
+      }
+    };
+  </script>
+
+</body>
+</html>
