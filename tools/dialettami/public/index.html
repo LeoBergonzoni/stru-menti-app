@@ -115,11 +115,21 @@
       border:1px solid #e5e7eb;
     }
     .muted { color:var(--muted); font-size:.95rem }
-
-    /* Modale limite click */
+    .dictate-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .dictate-btn:hover {
+      background: rgba(0,0,0,0.05);
+    }
     #popup-modal {
-      position:fixed;
-      top:0; left:0; width:100%; height:100%;
+      position:fixed; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.5);
       display:none; align-items:center; justify-content:center;
       z-index:1000;
@@ -130,20 +140,14 @@
       border-radius:1rem; text-align:center;
       max-width:90%; box-shadow:var(--shadow);
     }
-
-    /* Cookie banner */
     #cookie-banner {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(255,255,255,0.9);
       color: #222;
       padding: 0.75rem 1rem;
       font-size: 0.85rem;
       border-radius: 0.5rem;
-      z-index: 999;
-      text-align: center;
+      z-index: 999; text-align: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     #cookie-banner button {
@@ -155,14 +159,12 @@
       border-radius: 0.3rem;
       cursor: pointer;
     }
-
     #counter {
       margin-top: 1.5rem;
       text-align: center;
       font-size: 0.85rem;
       color: var(--muted);
     }
-
     @media (min-width:720px){
       .outputs { grid-template-columns:1fr 1fr }
     }
@@ -182,7 +184,27 @@
       </div>
 
       <label class="muted">Scrivi la frase che vuoi tradurre:</label>
+      <button id="dictateBtn" class="dictate-btn" title="Dettatura vocale">🎙️</button>
       <textarea id="userInput" placeholder="Es: Oggi è una bella giornata."></textarea>
+
+      <label for="dialect" class="muted" style="margin-top:12px;display:block;">Scegli il dialetto</label>
+      <select id="dialect">
+        <optgroup label="Nord Italia">
+          <option>Milanese</option><option>Piemontese</option><option>Bolognese</option><option>Romagnolo</option>
+          <option>Veneto</option><option>Liguriano</option><option>Friulano</option><option>Ladino</option>
+        </optgroup>
+        <optgroup label="Centro Italia">
+          <option>Toscano</option><option>Fiorentino</option><option>Romanesco</option>
+          <option>Dialetti umbri</option><option>Dialetti marchigiani</option><option>Dialetti laziali (non romaneschi)</option>
+        </optgroup>
+        <optgroup label="Sud Italia">
+          <option>Napoletano</option><option>Calabrese di Cosenza</option><option>Calabrese di Catanzaro</option>
+          <option>Salentino</option><option>Pugliese (Apulo)</option>
+        </optgroup>
+        <optgroup label="Isole">
+          <option>Siciliano</option><option>Sardo</option><option>Logudorese</option><option>Campidanese</option>
+        </optgroup>
+      </select>
 
       <div style="margin-top:16px">
         <button id="btn" class="btn">
@@ -203,10 +225,8 @@
         </div>
       </div>
 
-      <!-- Contatore -->
       <div id="counter"></div>
 
-      <!-- Modale -->
       <div id="popup-modal">
         <div class="modal-content">
           <p>Hai raggiunto il limite mensile di utilizzo gratuito.</p>
@@ -214,7 +234,6 @@
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="footer">
         <span class="badge">
           2025 Dialettami da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI
@@ -223,7 +242,6 @@
     </div>
   </div>
 
-  <!-- Cookie Banner -->
   <div id="cookie-banner">
     Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
     <button onclick="acceptCookies()">Ok</button>
