@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stru🧠Menti – Piani Premium</title>
+  <meta name="description" content="Scegli un piano Premium per usare gli strumenti Stru🧠Menti con limiti più alti o illimitati."/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+  <link href="style.css" rel="stylesheet">
+  <style>
+    .tabs { display:flex; justify-content:center; gap:.5rem; margin: 1rem 0; }
+    .tab { padding:.5rem 1rem; border:1px solid #444; border-radius:999px; cursor:pointer; font-size:.95rem; background:#121212; }
+    .tab.active { background:#fff; color:#000; }
+    .plan-grid .plan-box { min-height: 180px; }
+    .plan-price { font-size: 1rem; margin:.2rem 0 .6rem; }
+    .actions { display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; }
+    .btn-outline { padding:.45rem .9rem; border:1px solid #444; background:transparent; color:#ddd; border-radius:6px; text-decoration:none; }
+    .note { color:#aaa; font-size:.85rem; margin-top:.8rem; }
+    .back { display:inline-block; margin-top:1rem; color:#ccc; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Stru🧠Menti</h1>
+    <h2>Scegli il tuo piano Premium</h2>
+  </header>
+
+  <main>
+    <div class="tabs" role="tablist" aria-label="Seleziona fatturazione">
+      <button id="tab-monthly" class="tab active" role="tab" aria-selected="true" aria-controls="monthly">Mensile</button>
+      <button id="tab-annual" class="tab" role="tab" aria-selected="false" aria-controls="annual">Annuale</button>
+    </div>
+
+    <!-- MONTHLY -->
+    <section id="monthly" class="pricing" aria-labelledby="tab-monthly">
+      <div class="plan-grid">
+        <div class="plan-box premium">
+          <h4>Premium 300</h4>
+          <p>✅ 300 click al mese per strumento</p>
+          <p class="plan-price">💳 €3/mese</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premium300" data-billing="monthly">Sottoscrivi e paga</button>
+          </div>
+        </div>
+        <div class="plan-box premium">
+          <h4>Premium 400</h4>
+          <p>✅ 400 click al mese per strumento</p>
+          <p class="plan-price">💳 €4/mese</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premium400" data-billing="monthly">Sottoscrivi e paga</button>
+          </div>
+        </div>
+        <div class="plan-box premium">
+          <h4>Premium Illimitato</h4>
+          <p>✅ Click illimitati per tutti gli strumenti</p>
+          <p class="plan-price">💳 €5/mese</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premiumUnlimited" data-billing="monthly">Sottoscrivi e paga</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">L’addebito è ricorrente. Potrai annullare in qualsiasi momento.</p>
+    </section>
+
+    <!-- ANNUAL -->
+    <section id="annual" class="pricing" aria-labelledby="tab-annual" style="display:none;">
+      <div class="plan-grid">
+        <div class="plan-box premium">
+          <h4>Premium 300</h4>
+          <p>✅ 300 click al mese per strumento</p>
+          <p class="plan-price">💳 €30/anno</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premium300" data-billing="annual">Sottoscrivi e paga</button>
+          </div>
+        </div>
+        <div class="plan-box premium">
+          <h4>Premium 400</h4>
+          <p>✅ 400 click al mese per strumento</p>
+          <p class="plan-price">💳 €40/anno</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premium400" data-billing="annual">Sottoscrivi e paga</button>
+          </div>
+        </div>
+        <div class="plan-box premium">
+          <h4>Premium Illimitato</h4>
+          <p>✅ Click illimitati per tutti gli strumenti</p>
+          <p class="plan-price">💳 €50/anno</p>
+          <div class="actions">
+            <a class="btn-outline" href="login.html">Accedi</a>
+            <button class="btn-small" data-plan="premiumUnlimited" data-billing="annual">Sottoscrivi e paga</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">Risparmi circa 2 mesi rispetto al mensile.</p>
+    </section>
+
+    <a class="back" href="index.html">← Torna alla Home</a>
+  </main>
+
+  <footer>
+    <small>&copy; 2025 Stru🧠Menti – Tutti i diritti riservati
+      <a href="privacy.html">Privacy</a> · <a href="termini.html">Termini</a>
+    </small>
+  </footer>
+
+  <script type="module" src="premium.js"></script>
+</body>
+</html>
