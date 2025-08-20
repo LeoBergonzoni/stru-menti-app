@@ -215,3 +215,19 @@ function splitSections(text) {
   if (m) { return { translation: m[1].trim(), explanation: m[2].trim() }; }
   return { translation: text.trim(), explanation: '' };
 }
+const usageInfo = document.getElementById('usage-info');
+const planLabel = document.getElementById('plan-label');
+const clicksLabel = document.getElementById('clicks-label');
+
+async function updateBadge(user){
+  const { plan, used, limit } = await getPlanAndCount(user);
+  planLabel.textContent = plan === 'anonymous' ? 'Anonimo' : (plan === 'premium' ? 'Premium' : 'Free');
+  clicksLabel.textContent = `${used} / ${limit}`;
+  usageInfo.classList.remove('hidden');
+}
+
+onAuthStateChanged(auth, (u)=>{ currentUser = u || null; updateBadge(currentUser); });
+
+// dopo incrementCount in btn.addEventListener
+await incrementCount(currentUser, ref);
+await updateBadge(currentUser);

@@ -71,6 +71,9 @@
 #bottom-nav a { text-decoration:none; background:transparent; border:none; cursor:pointer; font-size:1.5rem; transition:opacity .3s; }
 #bottom-nav a:hover { opacity:1; }
 
+#usage-info{margin-top:16px;text-align:center;font-size:.9rem;color:var(--muted)}
+#usage-info span{display:inline-block;margin:0 4px;padding:6px 10px;border-radius:12px;background:#fff;border:1px solid #e5e7eb}
+
   </style>
 </head>
 <body>
@@ -150,6 +153,10 @@
 
       <div class="footer">
         <span class="badge">2025 Dialettami da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI</span>
+        <div id="usage-info" class="hidden">
+          <span id="plan-label">Anonimo</span>
+          <span id="clicks-label">0 / 0</span>
+        </div>
       </div>
     </div>
   </div>
