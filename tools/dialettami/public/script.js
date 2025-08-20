@@ -106,7 +106,7 @@ if (dictateBtn) {
 }
 
 // ===== Contatore allineato a Ricettario/BeKind =====
-const LIMITS = { anonymous: 5, free: 30, premium: 300 };
+const LIMITS = { anonymous: 5, free: 40, premium: 300 };
 const ANON_CLICKS_KEY  = 'anonClicks';      // come Ricettario
 const ANON_MONTH_KEY   = 'anonMonth';       // come Ricettario
 

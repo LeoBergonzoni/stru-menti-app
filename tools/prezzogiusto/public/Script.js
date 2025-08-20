@@ -45,7 +45,7 @@ onAuthStateChanged(auth, async (currentUser) => {
       const userData = userSnap.data();
       userPlan = userData.plan || "free-logged";
     }
-    maxClicks = userPlan === "premium" ? 300 : 30;
+    maxClicks = userPlan === "premium" ? 300 : 40;
 
     const clickRef = doc(db, "clicks", user.uid);
     const clickSnap = await getDoc(clickRef);
