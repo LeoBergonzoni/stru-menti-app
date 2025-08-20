@@ -101,6 +101,17 @@ body {
     cursor: pointer;
   }
   
+  .btn-small {
+    margin-top: 1rem;
+    padding: 0.4rem 1rem;
+    background-color: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
   footer {
     margin-top: 3rem;
     font-size: 0.9rem;
