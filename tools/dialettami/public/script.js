@@ -1,13 +1,14 @@
-// Dialettami — script.js (GA + Cookie banner + Firebase click counter + Modale limite + Badge "Free logged")
-// Endpoint della Netlify Function che fa da proxy verso OpenAI
+// Dialettami — script.js (allineato a Ricettario/BeKind)
+
+
+// ===== Endpoint funzione Netlify (proxy verso AI) =====
 const API_PROXY_URL = '/.netlify/functions/dialettami';
 
-// ===== Firebase (click counting) =====
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+// ===== Firebase =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
   authDomain: "stru-menti.firebaseapp.com",
@@ -32,42 +33,38 @@ const formItToDia = el('form-it-to-dia');
 const formDiaToIt = el('form-dia-to-it');
 const pillItToDia = el('mode-it-to-dialetto');
 const pillDiaToIt = el('mode-dialetto-to-it');
-const dictateBtn = document.getElementById('dictate');
+const dictateBtn = el('dictate');
 
-// Badge contatore in footer (come sugli altri strumenti)
-const usageInfo  = el('usage-info')    || document.getElementById('usage-info');
-const planLabel  = el('plan-label')    || document.getElementById('plan-label');
-const clicksLabel= el('clicks-label')  || document.getElementById('clicks-label');
+// Badge (footer)
+const usageInfo   = el('usage-info');
+const planLabel   = el('plan-label');
+const clicksLabel = el('clicks-label');
 
-// ===== Cookie banner + GA =====
-const COOKIE_KEY = 'sm_cookie_consent_v1';
-function showCookieBannerIfNeeded(){
-  const consent = localStorage.getItem(COOKIE_KEY);
-  const banner = document.getElementById('cookie-banner');
-  if(!consent && banner){ banner.classList.remove('hidden'); }
-}
-window.acceptCookies = function(){
-  localStorage.setItem(COOKIE_KEY, 'accepted');
-  // aggiorna consenso e avvia GA
-  if (window.gtag) {
-    gtag('consent', 'update', { 'analytics_storage': 'granted' });
-    gtag('js', new Date());
-    gtag('config', 'G-GQBTEG460W');
+// Modali (supporto entrambi i tipi)
+const limitModalOverlay = el('limit-modal');      // Ricettario/BeKind
+const limitBackdrop     = el('limit-backdrop');   // Dialettami
+
+function openLimit() {
+  if (limitModalOverlay) {
+    limitModalOverlay.classList.add('active');
+    limitModalOverlay.classList.remove('hidden');
+  } else if (limitBackdrop) {
+    limitBackdrop.style.display = 'flex';
+  } else {
+    alert('Hai raggiunto il limite gratuito. Accedi o passa a Premium per continuare.');
   }
-  const banner = document.getElementById('cookie-banner');
-  banner && banner.classList.add('hidden');
-};
-showCookieBannerIfNeeded();
-
-// ===== Modale limite =====
-const limitBackdrop = el('limit-backdrop');
-function openLimitModal(message){
-  const txt = document.getElementById('limit-text');
-  if(message && txt) txt.textContent = message;
-  if (limitBackdrop) limitBackdrop.style.display = 'flex';
 }
-function closeLimitModal(){ if (limitBackdrop) limitBackdrop.style.display = 'none'; }
-limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) closeLimitModal(); });
+function closeLimit() {
+  if (limitModalOverlay) {
+    limitModalOverlay.classList.remove('active');
+    limitModalOverlay.classList.add('hidden');
+  }
+  if (limitBackdrop) limitBackdrop.style.display = 'none';
+}
+el('close-limit')?.addEventListener('click', closeLimit);
+limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) closeLimit(); });
+
+// ===== Cookie banner + GA (già in index; niente da fare qui) =====
 
 // ===== Modalità iniziale =====
 function setMode(mode){
@@ -99,119 +96,127 @@ let recognition; let listening = false;
 try {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) { recognition = new SR(); recognition.lang = 'it-IT'; recognition.interimResults = true; recognition.continuous = false; }
-} catch (e) { console.warn('SpeechRecognition non disponibile in questo browser.'); }
+} catch (_) {}
 if (dictateBtn) {
   dictateBtn.addEventListener('click', () => { if (!recognition) return alert('La dettatura non è supportata su questo browser.'); if (!listening) recognition.start(); else recognition.stop(); });
   recognition?.addEventListener('start', () => { listening = true; dictateBtn.disabled = false; dictateBtn.textContent = '⏺️ Sto ascoltando… (tocca per fermare)'; });
   recognition?.addEventListener('result', (e) => { const text = Array.from(e.results).map(r => r[0].transcript).join(' '); const active = document.querySelector('#form-it-to-dia:not(.hidden) #text-it, #form-dia-to-it:not(.hidden) #text-dia'); if (active) active.value = text; });
-  recognition?.addEventListener('error', (e) => { listening = false; dictateBtn.textContent = '🎙️ Dettatura'; if (e.error !== 'no-speech') { console.warn('Errore dettatura:', e.error); alert('Errore dettatura: ' + e.error); } });
+  recognition?.addEventListener('error', (e) => { listening = false; dictateBtn.textContent = '🎙️ Dettatura'; if (e.error !== 'no-speech') alert('Errore dettatura: ' + e.error); });
   recognition?.addEventListener('end', () => { listening = false; dictateBtn.textContent = '🎙️ Dettatura'; });
 }
 
-// ===== Click counting (limiti: 5 anonimo, 30 free, 300 premium) =====
+// ===== Contatore allineato a Ricettario/BeKind =====
 const LIMITS = { anonymous: 5, free: 30, premium: 300 };
-function ymKey(){ const d = new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`; }
-function localKey(){ return `dialettami_clicks_${ymKey()}`; }
+const ANON_CLICKS_KEY  = 'anonClicks';      // come Ricettario
+const ANON_MONTH_KEY   = 'anonMonth';       // come Ricettario
 
-async function getPlanAndCount(user){
-  const period = ymKey();
-  if(!user){
-    // anonimo su localStorage
-    const used = parseInt(localStorage.getItem(localKey())||'0',10);
-    return { plan: 'anonymous', used, limit: LIMITS.anonymous, ref: null };
-  }
-  // utente loggato: leggi piano + usage da Firestore
-  const profileRef = doc(db, 'users', user.uid);
-  const profileSnap = await getDoc(profileRef);
-  const plan = (profileSnap.exists() && profileSnap.data().plan === 'premium') ? 'premium' : 'free';
+const monthKey = ()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}`; };
 
-  const usageRef = doc(db, 'usage', `${user.uid}_dialettami_${period}`);
-  const usageSnap = await getDoc(usageRef);
-  const used = usageSnap.exists() ? (usageSnap.data().count || 0) : 0;
-  const limit = plan === 'premium' ? LIMITS.premium : LIMITS.free;
-  return { plan, used, limit, ref: usageRef };
-}
+let currentUser = null;
+let userPlanLabel = 'Anonimo';  // "Anonimo" | "Free logged" | "Premium"
+let monthlyClicks = 0;
+let maxClicks = LIMITS.anonymous;
 
-async function incrementCount(user, usageRef){
-  const period = ymKey();
-  if(!user){
-    const k = localKey();
-    const cur = parseInt(localStorage.getItem(k)||'0',10);
-    const next = cur+1;
-    localStorage.setItem(k, String(next));
-    return next;
-  }
-  // crea/aggiorna doc su Firestore
-  const exists = await getDoc(usageRef);
-  if(!exists.exists()){
-    await setDoc(usageRef, { count: 1, period, tool: 'dialettami', ts: Date.now() });
-    return 1;
-  } else {
-    await updateDoc(usageRef, { count: increment(1), ts: Date.now() });
-    const snap = await getDoc(usageRef);
-    return (snap.data().count)||0;
-  }
-}
-
-// ===== Badge footer =====
-function renderUsageBadge(plan, used, limit){
+function renderBadge() {
   if (!usageInfo || !planLabel || !clicksLabel) return;
-  const label = plan === 'anonymous' ? 'Anonimo' : (plan === 'premium' ? 'Premium' : 'Free logged');
-  planLabel.textContent = label;
-  clicksLabel.textContent = `${used} / ${limit}`;
+  planLabel.textContent = userPlanLabel;
+  clicksLabel.textContent = `${monthlyClicks} / ${maxClicks}`;
   usageInfo.classList.remove('hidden');
 }
 
-let currentUser = null;
-onAuthStateChanged(auth, async (u)=>{
+async function readUserPlanAndClicks(user) {
+  if (!user) {
+    // Anonimo
+    userPlanLabel = 'Anonimo';
+    maxClicks = LIMITS.anonymous;
+    const mKey = localStorage.getItem(ANON_MONTH_KEY);
+    const cKey = localStorage.getItem(ANON_CLICKS_KEY);
+    monthlyClicks = (mKey === monthKey()) ? parseInt(cKey || '0', 10) : 0;
+    return;
+  }
+  // Logged: leggi piano e conteggio come negli altri tool
+  const userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
+  const plan = snap.exists() ? (snap.data().plan || 'free') : 'free';
+  userPlanLabel = (plan === 'premium') ? 'Premium' : 'Free logged';
+  maxClicks = (plan === 'premium') ? LIMITS.premium : LIMITS.free;
+
+  const clicksRef = doc(db, 'clicks', user.uid);
+  const clicksSnap = await getDoc(clicksRef);
+  const m = monthKey();
+  if (!clicksSnap.exists()) {
+    await setDoc(clicksRef, { [m]: 0 });
+    monthlyClicks = 0;
+  } else {
+    monthlyClicks = clicksSnap.data()?.[m] ?? 0;
+  }
+}
+
+async function incrementClicks(user) {
+  if (!user) {
+    // anonimo
+    const m = monthKey();
+    const curM = localStorage.getItem(ANON_MONTH_KEY);
+    if (curM !== m) {
+      localStorage.setItem(ANON_MONTH_KEY, m);
+      localStorage.setItem(ANON_CLICKS_KEY, '0');
+      monthlyClicks = 0;
+    }
+    monthlyClicks += 1;
+    localStorage.setItem(ANON_CLICKS_KEY, String(monthlyClicks));
+    return;
+  }
+  // logged
+  const clicksRef = doc(db, 'clicks', user.uid);
+  const m = monthKey();
+  await updateDoc(clicksRef, { [m]: increment(1) });
+  monthlyClicks += 1; // riflette subito nel badge
+}
+
+onAuthStateChanged(auth, async (u) => {
   currentUser = u || null;
-  const { plan, used, limit } = await getPlanAndCount(currentUser);
-  renderUsageBadge(plan, used, limit);
+  await readUserPlanAndClicks(currentUser);
+  renderBadge();
 });
 
 // ===== Richiesta traduzione con controllo limiti =====
 btn.addEventListener('click', async () => {
-  // check quota prima
+  // Controllo limiti PRIMA della chiamata
+  if (monthlyClicks >= maxClicks) {
+    renderBadge();
+    openLimit();
+    return;
+  }
+
   btn.disabled = true;
   try {
-    const { plan, used, limit, ref } = await getPlanAndCount(currentUser);
-    if(used >= limit){
-      renderUsageBadge(plan, used, limit);
-      openLimitModal(
-        plan === 'anonymous'
-          ? 'Hai raggiunto il limite per utenti anonimi (5 richieste/mese). Accedi o passa a Premium per continuare.'
-          : (plan === 'free'
-              ? 'Hai raggiunto il limite del piano Free (30 richieste/mese). Passa a Premium per continuare.'
-              : 'Hai raggiunto il limite del piano.')
-      );
-      return; // blocca richiesta
-    }
-
-    // Resetta output
+    // UI state
     translationEl.textContent = '⏳ Sto generando la traduzione...';
     explanationEl.textContent = '…';
 
     const isItToDia = !formItToDia.classList.contains('hidden');
+    let prompt = '';
     if (isItToDia) {
       const phrase = el('text-it').value.trim();
       const dialect = el('dialect').value;
       if (!phrase) { translationEl.textContent = 'Per favore inserisci una frase da tradurre.'; explanationEl.textContent = ''; return; }
-      const prompt = `Riformula questa frase "${phrase}" nel dialetto italiano "${dialect}" nella maniera più accurata possibile. Mostrami la frase tradotta e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini tradotti. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
-      await askAI(prompt);
+      prompt = `Riformula questa frase "${phrase}" nel dialetto italiano "${dialect}" nella maniera più accurata possibile. Mostrami la frase tradotta e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini tradotti. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
     } else {
       const phrase = el('text-dia').value.trim();
       if (!phrase) { translationEl.textContent = 'Per favore inserisci una frase da tradurre.'; explanationEl.textContent = ''; return; }
-      const prompt = `Riformula questa frase "${phrase}" scritta in dialetto in un italiano corretto nella maniera più accurata e formale possibile. Mostrami la frase in italiano corretto e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini che hai tradotto dal dialetto e dimmi da quale dialetto vengono. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
-      await askAI(prompt);
+      prompt = `Riformula questa frase "${phrase}" scritta in dialetto in un italiano corretto nella maniera più accurata e formale possibile. Mostrami la frase in italiano corretto e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini che hai tradotto dal dialetto e dimmi da quale dialetto vengono. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
     }
 
-    // incremento conteggio SOLO se la richiesta è partita
-    const newUsed = await incrementCount(currentUser, ref);
-    renderUsageBadge(plan, newUsed, limit);
+    // Chiamata AI
+    await askAI(prompt);
 
-  } catch(err){
+    // ✅ incremento SOLO se la richiesta è andata a buon fine
+    await incrementClicks(currentUser);
+    renderBadge();
+
+  } catch (err) {
     console.error(err);
-    translationEl.textContent = 'Si è verificato un errore.';
+    translationEl.textContent = 'Si è verificato un errore nel generare la traduzione.';
     explanationEl.textContent = (err && err.message) ? err.message : String(err);
   } finally {
     btn.disabled = false;
@@ -223,14 +228,18 @@ async function askAI(prompt) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 60000);
   try {
-    const res = await fetch(API_PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }), signal: controller.signal });
+    const res = await fetch(API_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal
+    });
     if (!res.ok) { const errText = await res.text(); throw new Error(errText || 'Errore di rete'); }
     const data = await res.json();
     parseAndRender(data.output || '');
-  } catch (err) {
-    translationEl.textContent = 'Si è verificato un errore nel generare la traduzione.';
-    explanationEl.textContent = (err && err.message) ? err.message : String(err);
-  } finally { clearTimeout(t); }
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 function parseAndRender(text) {
@@ -238,10 +247,9 @@ function parseAndRender(text) {
   translationEl.textContent = parts.translation || '—';
   explanationEl.textContent = parts.explanation || '—';
 }
-
 function splitSections(text) {
   const regex = /TRADUZIONE\s*:\s*([\s\S]*?)(?:\n{2,}|\r{2,}|$)SPIEGAZIONE\s*:\s*([\s\S]*)/i;
   const m = text.match(regex);
-  if (m) { return { translation: m[1].trim(), explanation: m[2].trim() }; }
+  if (m) return { translation: m[1].trim(), explanation: m[2].trim() };
   return { translation: text.trim(), explanation: '' };
 }
