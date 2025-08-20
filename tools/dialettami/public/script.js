@@ -1,4 +1,4 @@
-// Dialettami — script.js (mod: GA + Cookie banner + Firebase click counter + Modal limite)
+// Dialettami — script.js (GA + Cookie banner + Firebase click counter + Modale limite + Badge "Free logged")
 // Endpoint della Netlify Function che fa da proxy verso OpenAI
 const API_PROXY_URL = '/.netlify/functions/dialettami';
 
@@ -34,11 +34,17 @@ const pillItToDia = el('mode-it-to-dialetto');
 const pillDiaToIt = el('mode-dialetto-to-it');
 const dictateBtn = document.getElementById('dictate');
 
+// Badge contatore in footer (come sugli altri strumenti)
+const usageInfo  = el('usage-info')    || document.getElementById('usage-info');
+const planLabel  = el('plan-label')    || document.getElementById('plan-label');
+const clicksLabel= el('clicks-label')  || document.getElementById('clicks-label');
+
 // ===== Cookie banner + GA =====
 const COOKIE_KEY = 'sm_cookie_consent_v1';
 function showCookieBannerIfNeeded(){
   const consent = localStorage.getItem(COOKIE_KEY);
-  if(!consent){ document.getElementById('cookie-banner').classList.remove('hidden'); }
+  const banner = document.getElementById('cookie-banner');
+  if(!consent && banner){ banner.classList.remove('hidden'); }
 }
 window.acceptCookies = function(){
   localStorage.setItem(COOKIE_KEY, 'accepted');
@@ -48,18 +54,19 @@ window.acceptCookies = function(){
     gtag('js', new Date());
     gtag('config', 'G-GQBTEG460W');
   }
-  document.getElementById('cookie-banner').classList.add('hidden');
+  const banner = document.getElementById('cookie-banner');
+  banner && banner.classList.add('hidden');
 };
 showCookieBannerIfNeeded();
 
-// ===== Modal limite =====
+// ===== Modale limite =====
 const limitBackdrop = el('limit-backdrop');
 function openLimitModal(message){
   const txt = document.getElementById('limit-text');
-  if(message) txt.textContent = message;
-  limitBackdrop.style.display = 'flex';
+  if(message && txt) txt.textContent = message;
+  if (limitBackdrop) limitBackdrop.style.display = 'flex';
 }
-function closeLimitModal(){ limitBackdrop.style.display = 'none'; }
+function closeLimitModal(){ if (limitBackdrop) limitBackdrop.style.display = 'none'; }
 limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) closeLimitModal(); });
 
 // ===== Modalità iniziale =====
@@ -130,8 +137,9 @@ async function incrementCount(user, usageRef){
   if(!user){
     const k = localKey();
     const cur = parseInt(localStorage.getItem(k)||'0',10);
-    localStorage.setItem(k, String(cur+1));
-    return cur+1;
+    const next = cur+1;
+    localStorage.setItem(k, String(next));
+    return next;
   }
   // crea/aggiorna doc su Firestore
   const exists = await getDoc(usageRef);
@@ -145,8 +153,21 @@ async function incrementCount(user, usageRef){
   }
 }
 
+// ===== Badge footer =====
+function renderUsageBadge(plan, used, limit){
+  if (!usageInfo || !planLabel || !clicksLabel) return;
+  const label = plan === 'anonymous' ? 'Anonimo' : (plan === 'premium' ? 'Premium' : 'Free logged');
+  planLabel.textContent = label;
+  clicksLabel.textContent = `${used} / ${limit}`;
+  usageInfo.classList.remove('hidden');
+}
+
 let currentUser = null;
-onAuthStateChanged(auth, (u)=>{ currentUser = u || null; });
+onAuthStateChanged(auth, async (u)=>{
+  currentUser = u || null;
+  const { plan, used, limit } = await getPlanAndCount(currentUser);
+  renderUsageBadge(plan, used, limit);
+});
 
 // ===== Richiesta traduzione con controllo limiti =====
 btn.addEventListener('click', async () => {
@@ -155,7 +176,14 @@ btn.addEventListener('click', async () => {
   try {
     const { plan, used, limit, ref } = await getPlanAndCount(currentUser);
     if(used >= limit){
-      openLimitModal(plan === 'anonymous' ? 'Hai raggiunto il limite per utenti anonimi (5 richieste/mese). Accedi o passa a Premium per continuare.' : (plan === 'free' ? 'Hai raggiunto il limite del piano Free (30 richieste/mese). Passa a Premium per continuare.' : 'Hai raggiunto il limite del piano.'));
+      renderUsageBadge(plan, used, limit);
+      openLimitModal(
+        plan === 'anonymous'
+          ? 'Hai raggiunto il limite per utenti anonimi (5 richieste/mese). Accedi o passa a Premium per continuare.'
+          : (plan === 'free'
+              ? 'Hai raggiunto il limite del piano Free (30 richieste/mese). Passa a Premium per continuare.'
+              : 'Hai raggiunto il limite del piano.')
+      );
       return; // blocca richiesta
     }
 
@@ -177,8 +205,10 @@ btn.addEventListener('click', async () => {
       await askAI(prompt);
     }
 
-    // incremento conteggio solo se la richiesta è partita
-    await incrementCount(currentUser, ref);
+    // incremento conteggio SOLO se la richiesta è partita
+    const newUsed = await incrementCount(currentUser, ref);
+    renderUsageBadge(plan, newUsed, limit);
+
   } catch(err){
     console.error(err);
     translationEl.textContent = 'Si è verificato un errore.';
@@ -215,19 +245,3 @@ function splitSections(text) {
   if (m) { return { translation: m[1].trim(), explanation: m[2].trim() }; }
   return { translation: text.trim(), explanation: '' };
 }
-const usageInfo = document.getElementById('usage-info');
-const planLabel = document.getElementById('plan-label');
-const clicksLabel = document.getElementById('clicks-label');
-
-async function updateBadge(user){
-  const { plan, used, limit } = await getPlanAndCount(user);
-  planLabel.textContent = plan === 'anonymous' ? 'Anonimo' : (plan === 'premium' ? 'Premium' : 'Free');
-  clicksLabel.textContent = `${used} / ${limit}`;
-  usageInfo.classList.remove('hidden');
-}
-
-onAuthStateChanged(auth, (u)=>{ currentUser = u || null; updateBadge(currentUser); });
-
-// dopo incrementCount in btn.addEventListener
-await incrementCount(currentUser, ref);
-await updateBadge(currentUser);
