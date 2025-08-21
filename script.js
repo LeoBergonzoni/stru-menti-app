@@ -14,19 +14,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db   = getFirestore(app);
 
-// Elementi DOM
-const userInfoDiv = document.getElementById("user-info");
-const plansSection = document.getElementById("plans-section");
-const premiumOnly = document.getElementById("premium-only");
+// Elementi DOM (tutti opzionali, mettiamo i null‑check)
+const userInfoDiv     = document.getElementById("user-info");
+const plansSection    = document.getElementById("plans-section");
 const footerAuthLinks = document.getElementById("auth-links");
 const footerLogoutBtn = document.getElementById("footer-logout-btn");
 
+// Badge piano
 const premiumStatus = document.getElementById("premium-status");
-const planInfo = document.getElementById("plan-info");
+const planInfo      = document.getElementById("plan-info");
 
-// Contenitore per call-to-action upgrade (solo free loggato)
+// CTA per free loggato
 const upgradeCTA = document.createElement("div");
 upgradeCTA.innerHTML = `
   <h3>🎉 Sei registrato!</h3>
@@ -34,69 +34,90 @@ upgradeCTA.innerHTML = `
   <a class="btn-small" href="premium.html">🎖️ Passa a Premium</a>
 `;
 
-// Stato autenticazione + piano
-onAuthStateChanged(auth, async (user) => {
-  premiumStatus.style.display = "none";
-  planInfo.textContent = "";
-  upgradeCTA.remove();
+function show(el)  { if (el) el.style.display = "block"; }
+function hide(el)  { if (el) el.style.display = "none"; }
 
-  if (user) {
-    // --- Nome utente in header ---
-    let name = user.displayName;
-    if (!name) {
-      try {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          name = docSnap.data().firstName || user.email;
-        } else {
-          name = user.email;
-        }
-      } catch (e) {
-        console.error("Errore recupero nome utente:", e);
-        name = user.email;
+onAuthStateChanged(auth, async (user) => {
+  // reset badge
+  if (premiumStatus) {
+    premiumStatus.style.display = "none";
+    if (planInfo) planInfo.textContent = "";
+    // rimuovi eventuale CTA appesa in precedenza
+    try { upgradeCTA.remove(); } catch {}
+
+  }
+
+  if (!user) {
+    // === Utente NON loggato ===
+    if (userInfoDiv) userInfoDiv.style.display = "none";
+    show(plansSection);                 // vedi i piani
+    show(footerAuthLinks);              // "Accedi | Registrati"
+    hide(footerLogoutBtn);              // nascondi "Esci"
+    return;
+  }
+
+  // === Utente loggato ===
+  // Header: saluto con nome
+  if (userInfoDiv) {
+    let name = user.displayName || user.email;
+    try {
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      if (usnap.exists()) {
+        const d = usnap.data();
+        name = d.firstName || user.email || name;
       }
+    } catch (e) {
+      // in caso di errore, continuiamo comunque
+      console.warn("Nome utente non recuperato:", e?.message || e);
     }
     userInfoDiv.textContent = `👋 Ciao, ${name}!`;
     userInfoDiv.style.display = "block";
+  }
 
-    // --- Mostra/nascondi sezioni ---
-    plansSection.style.display = "none";
-    premiumOnly.style.display = "block";
-    footerAuthLinks.style.display = "none";
-    footerLogoutBtn.style.display = "inline-block";
+  // Footer: link auth
+  hide(footerAuthLinks);   // non mostrare "Accedi | Registrati"
+  show(footerLogoutBtn);   // mostra "Esci"
 
-    // --- Piano attivo ---
+  // Nascondi i piani quando sei loggato
+  hide(plansSection);
+
+  // Badge piano attivo
+  try {
     const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      const plan = data.plan || "free";
+    const snap    = await getDoc(userRef);
+    let plan      = "free";
+    if (snap.exists()) plan = snap.data().plan || "free";
 
-      premiumStatus.style.display = "block";
+    if (premiumStatus) {
+      show(premiumStatus);
+
       if (plan === "free") {
-        planInfo.textContent = "👤 Attualmente sei su piano Free";
-        premiumStatus.appendChild(upgradeCTA); // 👈 aggiungi bottone Passa a Premium
+        if (planInfo) planInfo.textContent = "👤 Attualmente sei su piano Free";
+        // Aggiungi CTA "Passa a Premium"
+        premiumStatus.appendChild(upgradeCTA);
       } else {
-        if (plan === "premium300") planInfo.textContent = "🎖️ Piano Premium 300 attivo";
-        else if (plan === "premium400") planInfo.textContent = "🎖️ Piano Premium 400 attivo";
-        else if (plan === "premiumUnlimited") planInfo.textContent = "🎖️ Piano Premium Unlimited attivo";
-        else planInfo.textContent = "🎖️ Piano Premium attivo";
+        // Premium
+        let label = "🎖️ Piano Premium attivo";
+        if (plan === "premium300")      label = "🎖️ Piano Premium 300 attivo";
+        else if (plan === "premium400") label = "🎖️ Piano Premium 400 attivo";
+        else if (plan === "premiumUnlimited") label = "🎖️ Piano Premium Unlimited attivo";
+        if (planInfo) planInfo.textContent = label;
       }
     }
-  } else {
-    // --- Utente non loggato ---
-    userInfoDiv.style.display = "none";
-    plansSection.style.display = "block";
-    premiumOnly.style.display = "none";
-    footerAuthLinks.style.display = "inline";
-    footerLogoutBtn.style.display = "none";
+  } catch (e) {
+    console.error("Errore lettura piano utente:", e?.message || e);
+    // In caso di errore mostriamo almeno lo stato loggato base
+    if (premiumStatus && planInfo) {
+      show(premiumStatus);
+      planInfo.textContent = "👤 Accesso effettuato";
+    }
   }
 });
 
 // Logout
-footerLogoutBtn.addEventListener("click", () => {
-  signOut(auth).then(() => {
-    location.reload();
+if (footerLogoutBtn) {
+  footerLogoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => location.reload());
   });
-});
+}
