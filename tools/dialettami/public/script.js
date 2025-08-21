@@ -1,13 +1,14 @@
-// Dialettami — script.js (allineato a Ricettario/BeKind)
-
+// Dialettami — script.js (versione con contatore globale via usageHelper)
 
 // ===== Endpoint funzione Netlify (proxy verso AI) =====
 const API_PROXY_URL = '/.netlify/functions/dialettami';
 
+// ===== Helper conteggio globale =====
+import { loadUsage, incrementUsage, MONTH_KEY } from "/_assets/usageHelper.js";
+
 // ===== Firebase =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
@@ -19,7 +20,6 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
 // ===== UI helpers =====
 const el = (id) => document.getElementById(id);
@@ -40,7 +40,7 @@ const usageInfo   = el('usage-info');
 const planLabel   = el('plan-label');
 const clicksLabel = el('clicks-label');
 
-// Modali (supporto entrambi i tipi)
+// Modali (supporto due tipi)
 const limitModalOverlay = el('limit-modal');      // Ricettario/BeKind
 const limitBackdrop     = el('limit-backdrop');   // Dialettami
 
@@ -51,20 +51,15 @@ function openLimit() {
   } else if (limitBackdrop) {
     limitBackdrop.style.display = 'flex';
   } else {
-    alert('Hai raggiunto il limite gratuito. Accedi o passa a Premium per continuare.');
+    alert('Hai raggiunto il limite. Accedi o passa a Premium per continuare.');
   }
 }
 function closeLimit() {
-  if (limitModalOverlay) {
-    limitModalOverlay.classList.remove('active');
-    limitModalOverlay.classList.add('hidden');
-  }
+  if (limitModalOverlay) { limitModalOverlay.classList.remove('active'); limitModalOverlay.classList.add('hidden'); }
   if (limitBackdrop) limitBackdrop.style.display = 'none';
 }
 el('close-limit')?.addEventListener('click', closeLimit);
 limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) closeLimit(); });
-
-// ===== Cookie banner + GA (già in index; niente da fare qui) =====
 
 // ===== Modalità iniziale =====
 function setMode(mode){
@@ -84,7 +79,8 @@ document.querySelectorAll('.copy').forEach(copyBtn => {
     const target = copyBtn.getAttribute('data-target');
     const text = el(target).innerText.trim();
     if (!text) return;
-    try { await navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
       const old = copyBtn.innerText; copyBtn.innerText = 'Copiato!';
       setTimeout(() => (copyBtn.innerText = old), 1000);
     } catch (e) { alert('Copia non riuscita: ' + e.message); }
@@ -105,84 +101,25 @@ if (dictateBtn) {
   recognition?.addEventListener('end', () => { listening = false; dictateBtn.textContent = '🎙️ Dettatura'; });
 }
 
-// ===== Contatore allineato a Ricettario/BeKind =====
-const LIMITS = { anonymous: 5, free: 40, premium: 300 };
-const ANON_CLICKS_KEY  = 'anonClicks';      // come Ricettario
-const ANON_MONTH_KEY   = 'anonMonth';       // come Ricettario
-
-const monthKey = ()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}`; };
-
-let currentUser = null;
-let userPlanLabel = 'Anonimo';  // "Anonimo" | "Free logged" | "Premium"
-let monthlyClicks = 0;
-let maxClicks = LIMITS.anonymous;
+// ===== Contatore globale via usageHelper =====
+let usage = { user: null, planLabel: 'Anonimo', monthlyClicks: 0, maxClicks: 5, monthKey: MONTH_KEY() };
 
 function renderBadge() {
   if (!usageInfo || !planLabel || !clicksLabel) return;
-  planLabel.textContent = userPlanLabel;
-  clicksLabel.textContent = `${monthlyClicks} / ${maxClicks}`;
+  const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
+  planLabel.textContent = usage.planLabel;
+  clicksLabel.textContent = `${usage.monthlyClicks} / ${shownMax}`;
   usageInfo.classList.remove('hidden');
 }
 
-async function readUserPlanAndClicks(user) {
-  if (!user) {
-    // Anonimo
-    userPlanLabel = 'Anonimo';
-    maxClicks = LIMITS.anonymous;
-    const mKey = localStorage.getItem(ANON_MONTH_KEY);
-    const cKey = localStorage.getItem(ANON_CLICKS_KEY);
-    monthlyClicks = (mKey === monthKey()) ? parseInt(cKey || '0', 10) : 0;
-    return;
-  }
-  // Logged: leggi piano e conteggio come negli altri tool
-  const userRef = doc(db, 'users', user.uid);
-  const snap = await getDoc(userRef);
-  const plan = snap.exists() ? (snap.data().plan || 'free') : 'free';
-  userPlanLabel = (plan === 'premium') ? 'Premium' : 'Free logged';
-  maxClicks = (plan === 'premium') ? LIMITS.premium : LIMITS.free;
-
-  const clicksRef = doc(db, 'clicks', user.uid);
-  const clicksSnap = await getDoc(clicksRef);
-  const m = monthKey();
-  if (!clicksSnap.exists()) {
-    await setDoc(clicksRef, { [m]: 0 });
-    monthlyClicks = 0;
-  } else {
-    monthlyClicks = clicksSnap.data()?.[m] ?? 0;
-  }
-}
-
-async function incrementClicks(user) {
-  if (!user) {
-    // anonimo
-    const m = monthKey();
-    const curM = localStorage.getItem(ANON_MONTH_KEY);
-    if (curM !== m) {
-      localStorage.setItem(ANON_MONTH_KEY, m);
-      localStorage.setItem(ANON_CLICKS_KEY, '0');
-      monthlyClicks = 0;
-    }
-    monthlyClicks += 1;
-    localStorage.setItem(ANON_CLICKS_KEY, String(monthlyClicks));
-    return;
-  }
-  // logged
-  const clicksRef = doc(db, 'clicks', user.uid);
-  const m = monthKey();
-  await updateDoc(clicksRef, { [m]: increment(1) });
-  monthlyClicks += 1; // riflette subito nel badge
-}
-
-onAuthStateChanged(auth, async (u) => {
-  currentUser = u || null;
-  await readUserPlanAndClicks(currentUser);
+onAuthStateChanged(auth, async () => {
+  usage = await loadUsage(app);
   renderBadge();
 });
 
 // ===== Richiesta traduzione con controllo limiti =====
 btn.addEventListener('click', async () => {
-  // Controllo limiti PRIMA della chiamata
-  if (monthlyClicks >= maxClicks) {
+  if (usage.monthlyClicks >= usage.maxClicks) {
     renderBadge();
     openLimit();
     return;
@@ -190,7 +127,6 @@ btn.addEventListener('click', async () => {
 
   btn.disabled = true;
   try {
-    // UI state
     translationEl.textContent = '⏳ Sto generando la traduzione...';
     explanationEl.textContent = '…';
 
@@ -200,18 +136,18 @@ btn.addEventListener('click', async () => {
       const phrase = el('text-it').value.trim();
       const dialect = el('dialect').value;
       if (!phrase) { translationEl.textContent = 'Per favore inserisci una frase da tradurre.'; explanationEl.textContent = ''; return; }
-      prompt = `Riformula questa frase "${phrase}" nel dialetto italiano "${dialect}" nella maniera più accurata possibile. Mostrami la frase tradotta e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini tradotti. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
+      prompt = `Riformula questa frase "${phrase}" nel dialetto italiano "${dialect}" nella maniera più accurata possibile. Mostrami la frase tradotta e, separata, una breve spiegazione dei singoli termini. Formato:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
     } else {
       const phrase = el('text-dia').value.trim();
       if (!phrase) { translationEl.textContent = 'Per favore inserisci una frase da tradurre.'; explanationEl.textContent = ''; return; }
-      prompt = `Riformula questa frase "${phrase}" scritta in dialetto in un italiano corretto nella maniera più accurata e formale possibile. Mostrami la frase in italiano corretto e, in maniera separata dalla traduzione, anche una breve spiegazione dei singoli termini che hai tradotto dal dialetto e dimmi da quale dialetto vengono. Rispondi nel formato esatto:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
+      prompt = `Riformula questa frase "${phrase}" in un italiano corretto e formale. Mostra la frase e, separatamente, una breve spiegazione dei termini e il dialetto di origine. Formato:\nTRADUZIONE:\n<testo>\n\nSPIEGAZIONE:\n<elenco puntato breve>`;
     }
 
     // Chiamata AI
     await askAI(prompt);
 
     // ✅ incremento SOLO se la richiesta è andata a buon fine
-    await incrementClicks(currentUser);
+    usage.monthlyClicks = await incrementUsage(usage);
     renderBadge();
 
   } catch (err) {

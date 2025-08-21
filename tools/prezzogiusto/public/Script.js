@@ -1,8 +1,13 @@
-// Firebase e contatore click
+// PrezzoGiusto — script.js (contatore unico globale via usageHelper)
+
+// Firebase + Auth
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+// Helper contatore condiviso
+import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
+
+// Config Firebase (come negli altri tool)
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
   authDomain: "stru-menti.firebaseapp.com",
@@ -11,63 +16,26 @@ const firebaseConfig = {
   messagingSenderId: "851395234512",
   appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-let user = null;
-let userPlan = "Anonimo";
-let monthlyClicks = 0;
-let maxClicks = 5;
+// Stato usage condiviso (verrà popolato da loadUsage)
+let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };
 
-const getCurrentMonthKey = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${now.getMonth() + 1}`;
-};
-
-// Contatore visibile
+// Contatore visibile in fondo
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center;margin-top:1rem;font-size:0.85rem;color:#cbd5e1;";
 const footer = document.querySelector("footer");
 if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
 function updateCounter() {
-  counterDiv.innerHTML = `👤 Utente: <strong>${userPlan}</strong> — Utilizzi: <strong>${monthlyClicks}/${maxClicks}</strong>`;
+  const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
+  counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`;
 }
 
-onAuthStateChanged(auth, async (currentUser) => {
-  if (currentUser) {
-    user = currentUser;
-    const userDocRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userDocRef);
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      userPlan = userData.plan || "free-logged";
-    }
-    maxClicks = userPlan === "premium" ? 300 : 40;
-
-    const clickRef = doc(db, "clicks", user.uid);
-    const clickSnap = await getDoc(clickRef);
-    const monthKey = getCurrentMonthKey();
-
-    if (!clickSnap.exists()) {
-      await setDoc(clickRef, { [monthKey]: 0 });
-      monthlyClicks = 0;
-    } else {
-      monthlyClicks = clickSnap.data()?.[monthKey] ?? 0;
-    }
-  } else {
-    user = null;
-    userPlan = "Anonimo";
-    maxClicks = 5;
-
-    const storedClicks = localStorage.getItem("anonClicks");
-    const storedMonth = localStorage.getItem("anonMonth");
-    const nowMonth = getCurrentMonthKey();
-    monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
-  }
-
+// Carica piano + contatore globale quando cambia l’auth
+onAuthStateChanged(auth, async () => {
+  usage = await loadUsage(app);
   updateCounter();
 });
 
@@ -79,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const customLocationInput = document.getElementById("customLocation");
   const resultDiv = document.getElementById("result");
 
-  // Modale
+  // Modale limite
   const limitModal = document.getElementById("limit-modal");
   const closeLimit = document.getElementById("close-limit");
 
@@ -95,8 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (monthlyClicks >= maxClicks) {
-      // Mostra modale, niente redirect
+    // ✅ Controllo limite mensile globale
+    if (usage.monthlyClicks >= usage.maxClicks) {
       limitModal.classList.add("active");
       limitModal.classList.remove("hidden");
       return;
@@ -148,23 +116,15 @@ document.addEventListener("DOMContentLoaded", () => {
       resultDiv.innerText = data.result;
       resultDiv.classList.remove("hidden");
 
-      // ✅ Conteggio SOLO dopo risposta OK
-      monthlyClicks++;
-      if (user) {
-        const monthKey = getCurrentMonthKey();
-        const clickRef = doc(db, "clicks", user.uid);
-        await updateDoc(clickRef, { [monthKey]: increment(1) });
-      } else {
-        localStorage.setItem("anonClicks", monthlyClicks);
-        localStorage.setItem("anonMonth", getCurrentMonthKey());
-      }
+      // ✅ Incremento SOLO dopo risposta OK → contatore globale
+      usage.monthlyClicks = await incrementUsage(usage);
       updateCounter();
 
     } catch (error) {
       resultDiv.className = "mt-6 p-4 rounded text-white font-bold text-center bg-red-600";
       resultDiv.innerText = "Errore nella richiesta: " + error.message;
       resultDiv.classList.remove("hidden");
-      // ❌ Niente incremento in caso di errore
+      // ❌ niente incremento
     } finally {
       submitBtn.disabled = prevDisabled;
     }

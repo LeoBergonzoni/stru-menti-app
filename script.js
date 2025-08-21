@@ -23,11 +23,26 @@ const premiumOnly = document.getElementById("premium-only");
 const footerAuthLinks = document.getElementById("auth-links");
 const footerLogoutBtn = document.getElementById("footer-logout-btn");
 
-// Stato autenticazione
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    let name = user.displayName;
+const premiumStatus = document.getElementById("premium-status");
+const planInfo = document.getElementById("plan-info");
 
+// Contenitore per call-to-action upgrade (solo free loggato)
+const upgradeCTA = document.createElement("div");
+upgradeCTA.innerHTML = `
+  <h3>🎉 Sei registrato!</h3>
+  <p>Vuoi usare gli strumenti senza limiti?</p>
+  <a class="btn-small" href="premium.html">🎖️ Passa a Premium</a>
+`;
+
+// Stato autenticazione + piano
+onAuthStateChanged(auth, async (user) => {
+  premiumStatus.style.display = "none";
+  planInfo.textContent = "";
+  upgradeCTA.remove();
+
+  if (user) {
+    // --- Nome utente in header ---
+    let name = user.displayName;
     if (!name) {
       try {
         const docRef = doc(db, "users", user.uid);
@@ -42,19 +57,38 @@ onAuthStateChanged(auth, async (user) => {
         name = user.email;
       }
     }
-
     userInfoDiv.textContent = `👋 Ciao, ${name}!`;
     userInfoDiv.style.display = "block";
+
+    // --- Mostra/nascondi sezioni ---
     plansSection.style.display = "none";
     premiumOnly.style.display = "block";
-
     footerAuthLinks.style.display = "none";
     footerLogoutBtn.style.display = "inline-block";
+
+    // --- Piano attivo ---
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const plan = data.plan || "free";
+
+      premiumStatus.style.display = "block";
+      if (plan === "free") {
+        planInfo.textContent = "👤 Attualmente sei su piano Free";
+        premiumStatus.appendChild(upgradeCTA); // 👈 aggiungi bottone Passa a Premium
+      } else {
+        if (plan === "premium300") planInfo.textContent = "🎖️ Piano Premium 300 attivo";
+        else if (plan === "premium400") planInfo.textContent = "🎖️ Piano Premium 400 attivo";
+        else if (plan === "premiumUnlimited") planInfo.textContent = "🎖️ Piano Premium Unlimited attivo";
+        else planInfo.textContent = "🎖️ Piano Premium attivo";
+      }
+    }
   } else {
+    // --- Utente non loggato ---
     userInfoDiv.style.display = "none";
     plansSection.style.display = "block";
     premiumOnly.style.display = "none";
-
     footerAuthLinks.style.display = "inline";
     footerLogoutBtn.style.display = "none";
   }

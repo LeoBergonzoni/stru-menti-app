@@ -1,6 +1,8 @@
+// Ricettario — script.js (contatore unico globale via usageHelper)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -14,7 +16,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
 // UI Elements
 const form = document.getElementById("ingredients-form");
@@ -28,67 +29,31 @@ const recipeText = document.getElementById("recipe-text");
 const newRecipeBtn = document.getElementById("new-recipe");
 const copyBtn = document.getElementById("copy-recipe");
 
-// Modale (id allineato a Prezzo Giusto)
+// Modale limite
 const modal = document.getElementById("limit-modal");
 const modalClose = document.getElementById("close-limit");
 
-// Contatore visibile in fondo
+// Contatore visibile in fondo (stile leggero)
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85rem; color:#888;";
 const footer = document.querySelector("footer");
 if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
-let user = null;
-let userPlan = "Anonimo";
-let monthlyClicks = 0;
-let maxClicks = 5;
-
-const getCurrentMonthKey = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${now.getMonth() + 1}`;
-};
+// Stato usage condiviso (verrà popolato da loadUsage)
+let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };
 
 function updateCounter() {
-  counterDiv.innerHTML = `👤 Utente: <strong>${userPlan}</strong> — Utilizzi: <strong>${monthlyClicks}/${maxClicks}</strong>`;
+  const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
+  counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`;
 }
 
-onAuthStateChanged(auth, async (currentUser) => {
-  if (currentUser) {
-    user = currentUser;
-
-    const userDocRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userDocRef);
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      userPlan = userData.plan || "free-logged";
-    }
-    maxClicks = userPlan === "premium" ? 300 : 40;
-
-    const clickRef = doc(db, "clicks", user.uid);
-    const clickSnap = await getDoc(clickRef);
-    const monthKey = getCurrentMonthKey();
-
-    if (!clickSnap.exists()) {
-      await setDoc(clickRef, { [monthKey]: 0 });
-      monthlyClicks = 0;
-    } else {
-      monthlyClicks = clickSnap.data()?.[monthKey] ?? 0;
-    }
-  } else {
-    user = null;
-    userPlan = "Anonimo";
-    maxClicks = 5;
-
-    const storedClicks = localStorage.getItem("anonClicks");
-    const storedMonth = localStorage.getItem("anonMonth");
-    const nowMonth = getCurrentMonthKey();
-
-    monthlyClicks = (storedMonth === nowMonth) ? parseInt(storedClicks || "0") : 0;
-  }
-
+// Carica piano + contatore globale all’accesso/uscita
+onAuthStateChanged(auth, async () => {
+  usage = await loadUsage(app);
   updateCounter();
 });
 
+// Gestione ingredienti
 addButton.addEventListener("click", () => {
   const currentInputs = ingredientContainer.querySelectorAll("input").length;
   if (currentInputs < 10) {
@@ -96,7 +61,6 @@ addButton.addEventListener("click", () => {
     input.type = "text";
     input.name = "ingredient";
     input.placeholder = `Ingrediente ${currentInputs + 1}`;
-    // input.required = true; // se li vuoi obbligatori riattiva
     ingredientContainer.appendChild(input);
   }
 });
@@ -108,10 +72,12 @@ removeButton.addEventListener("click", () => {
   }
 });
 
+// Submit: controllo limiti + chiamata AI
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  if (monthlyClicks >= maxClicks) {
+  // Limite mensile globale
+  if (usage.monthlyClicks >= usage.maxClicks) {
     modal.classList.add("active");
     modal.classList.remove("hidden");
     return;
@@ -119,8 +85,7 @@ form.addEventListener("submit", async (e) => {
 
   const ingredients = Array.from(
     document.querySelectorAll("input[name='ingredient']")
-  ).map(input => input.value.trim()).filter(Boolean);
-
+  ).map(i => i.value.trim()).filter(Boolean);
   const location = locationSelect.value;
 
   recipeText.textContent = "🍳 Sto preparando la ricetta...";
@@ -140,25 +105,15 @@ form.addEventListener("submit", async (e) => {
     recipeTitle.textContent = `🍽️ ${cleanTitle}`;
     recipeText.textContent = body;
 
-    // ✅ Incrementa SOLO dopo risposta OK
-    monthlyClicks++;
-
-    if (user) {
-      const monthKey = getCurrentMonthKey();
-      const clickRef = doc(db, "clicks", user.uid);
-      await updateDoc(clickRef, { [monthKey]: increment(1) });
-    } else {
-      localStorage.setItem("anonClicks", monthlyClicks);
-      localStorage.setItem("anonMonth", getCurrentMonthKey());
-    }
-
+    // ✅ Incrementa SOLO dopo risposta OK → contatore globale
+    usage.monthlyClicks = await incrementUsage(usage);
     updateCounter();
+
   } catch (err) {
     recipeOutput.classList.add("hidden");
     alert("Si è verificato un errore. Riprova tra poco.");
     console.error(err);
   } finally {
-    // Ripristina stato pulsanti
     addButton.disabled = prevStates.add;
     removeButton.disabled = prevStates.remove;
     newRecipeBtn.disabled = prevStates.newBtn;
