@@ -34,7 +34,7 @@ function updateCounter() {
 }
 
 // Carica piano + contatore globale quando cambia l’auth
-onAuthStateChanged(auth, async () => {
+onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
   updateCounter();
 });

@@ -112,9 +112,9 @@ function renderBadge() {
   usageInfo.classList.remove('hidden');
 }
 
-onAuthStateChanged(auth, async () => {
+onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
-  renderBadge();
+  updateCounter();
 });
 
 // ===== Richiesta traduzione con controllo limiti =====

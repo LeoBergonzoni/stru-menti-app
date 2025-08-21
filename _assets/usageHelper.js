@@ -9,21 +9,21 @@ export const MONTH_KEY = () => {
   return `${d.getFullYear()}-${m}`; // es. 2025-08
 };
 
-// Chiavi localStorage per anonimi (contatore unico globale)
+// LocalStorage per ANONIMI (contatore UNICO globale)
 const LS_MONTH  = "anonMonth_global";
 const LS_CLICKS = "anonClicks_global";
 
 /**
- * Carica info piano + contatore mensile globale.
- * Accetta opzionalmente `userFromCaller` per evitare race condition
- * con onAuthStateChanged (dove currentUser può essere ancora null).
+ * Carica piano + contatore mensile globale.
+ * Passa SEMPRE l'utente ottenuto da onAuthStateChanged come 2° argomento:
+ *   loadUsage(app, user)
  */
 export async function loadUsage(app, userFromCaller = null) {
   const auth = getAuth(app);
   const db   = getFirestore(app);
   const user = userFromCaller ?? auth.currentUser;
 
-  // default: anonimo
+  // default anonimo
   let planLabel = "Anonimo";
   let maxClicks = 5;
   let monthlyClicks = 0;
@@ -36,27 +36,33 @@ export async function loadUsage(app, userFromCaller = null) {
     return { db, auth, user: null, planLabel, maxClicks, monthlyClicks, monthKey: m };
   }
 
-  // LOGGATO → leggi profilo utente per piano/limite
+  // LOGGATO → leggi piano/limite
   const m = MONTH_KEY();
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   const d = snap.exists() ? snap.data() : {};
 
-  const plan = d.plan || "free";
-  planLabel = (plan === "free" || plan === "free-logged" || plan === "freelogged") ? "Free logged"
-             : (plan === "premium300" ? "Premium 300"
-             : (plan === "premium400" ? "Premium 400"
-             : (plan === "premiumUnlimited" ? "Premium Unlimited" : "Premium")));
+  const rawPlan = d.plan || "free";
+  const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
 
-  // Fonte di verità dal backend (webhook)
-  maxClicks = (typeof d.clicksPerTool === "number") ? d.clicksPerTool : (plan !== "free" ? 300 : 40);
-  if (maxClicks > 1e8) maxClicks = 999999999; // "illimitato"
+  planLabel =
+    plan === "free"              ? "Free logged" :
+    plan === "premium300"        ? "Premium 300" :
+    plan === "premium400"        ? "Premium 400" :
+    plan === "premiumUnlimited"  ? "Premium Unlimited" :
+                                   "Premium";
 
-  // Contatore totale condiviso da tutti i tool: clicks_total/{uid} -> { "YYYY-MM": number }
+  // limite “fonte di verità” (da webhook)
+  maxClicks = (typeof d.clicksPerTool === "number")
+    ? d.clicksPerTool
+    : (plan !== "free" ? 300 : 40);
+  if (maxClicks > 1e8) maxClicks = 999999999; // illimitato
+
+  // Contatore GLOBALE condiviso: clicks_total/{uid} -> { "YYYY-MM": number }
   const clicksRef = doc(db, "clicks_total", user.uid);
   const cSnap = await getDoc(clicksRef);
   if (!cSnap.exists()) {
-    // crea doc con mese corrente a 0
+    // crea doc con mese corrente a 0 (merge per idempotenza)
     await setDoc(clicksRef, { [m]: 0 }, { merge: true });
     monthlyClicks = 0;
   } else {
@@ -67,7 +73,7 @@ export async function loadUsage(app, userFromCaller = null) {
 }
 
 /**
- * Incrementa il contatore globale. Ritorna il nuovo valore per aggiornare subito la UI.
+ * Incrementa il contatore globale. Ritorna il nuovo valore.
  */
 export async function incrementUsage({ db, user, monthKey, monthlyClicks }) {
   if (!user) {
