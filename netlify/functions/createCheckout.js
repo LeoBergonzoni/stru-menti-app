@@ -34,7 +34,16 @@ exports.handler = async (event) => {
       allow_promotion_codes: true,
       success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancelUrl,
+
+      // metadata utili al webhook
       metadata: { plan, billing, uid: uid || '' },
+
+      // importantissimo: metadati scritti ANCHE sulla subscription
+      subscription_data: {
+        metadata: { plan, billing, uid: uid || '' }
+      },
+
+      // se l'utente non è loggato, almeno l'email ci aiuta come fallback
       customer_email: email || undefined,
     });
 
