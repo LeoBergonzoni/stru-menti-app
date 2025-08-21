@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// Elementi DOM (tutti opzionali, mettiamo i null‑check)
+// Elementi DOM
 const userInfoDiv     = document.getElementById("user-info");
 const plansSection    = document.getElementById("plans-section");
 const footerAuthLinks = document.getElementById("auth-links");
@@ -26,38 +26,35 @@ const footerLogoutBtn = document.getElementById("footer-logout-btn");
 const premiumStatus = document.getElementById("premium-status");
 const planInfo      = document.getElementById("plan-info");
 
-// CTA per free loggato
-const upgradeCTA = document.createElement("div");
-upgradeCTA.innerHTML = `
+function show(el) { if (el) el.style.display = "block"; }
+function hide(el) { if (el) el.style.display = "none"; }
+
+// CTA HTML per free loggato
+const FREE_CTA_HTML = `
   <h3>🎉 Sei registrato!</h3>
   <p>Vuoi usare gli strumenti senza limiti?</p>
   <a class="btn-small" href="premium.html">🎖️ Passa a Premium</a>
 `;
 
-function show(el)  { if (el) el.style.display = "block"; }
-function hide(el)  { if (el) el.style.display = "none"; }
-
 onAuthStateChanged(auth, async (user) => {
-  // reset badge
+  // reset base
   if (premiumStatus) {
     premiumStatus.style.display = "none";
-    if (planInfo) planInfo.textContent = "";
-    // rimuovi eventuale CTA appesa in precedenza
-    try { upgradeCTA.remove(); } catch {}
-
+    premiumStatus.innerHTML = ""; // importantissimo: puliamo tutto
   }
+  if (planInfo) planInfo.textContent = "";
 
   if (!user) {
-    // === Utente NON loggato ===
+    // === Non loggato ===
     if (userInfoDiv) userInfoDiv.style.display = "none";
-    show(plansSection);                 // vedi i piani
-    show(footerAuthLinks);              // "Accedi | Registrati"
-    hide(footerLogoutBtn);              // nascondi "Esci"
+    show(plansSection);
+    show(footerAuthLinks);
+    hide(footerLogoutBtn);
     return;
   }
 
-  // === Utente loggato ===
-  // Header: saluto con nome
+  // === Loggato ===
+  // Saluto con nome
   if (userInfoDiv) {
     let name = user.displayName || user.email;
     try {
@@ -68,36 +65,34 @@ onAuthStateChanged(auth, async (user) => {
         name = d.firstName || user.email || name;
       }
     } catch (e) {
-      // in caso di errore, continuiamo comunque
       console.warn("Nome utente non recuperato:", e?.message || e);
     }
     userInfoDiv.textContent = `👋 Ciao, ${name}!`;
     userInfoDiv.style.display = "block";
   }
 
-  // Footer: link auth
-  hide(footerAuthLinks);   // non mostrare "Accedi | Registrati"
-  show(footerLogoutBtn);   // mostra "Esci"
-
-  // Nascondi i piani quando sei loggato
   hide(plansSection);
+  hide(footerAuthLinks);
+  show(footerLogoutBtn);
 
-  // Badge piano attivo
+  // Piano attivo
   try {
     const userRef = doc(db, "users", user.uid);
-    const snap    = await getDoc(userRef);
-    let plan      = "free";
-    if (snap.exists()) plan = snap.data().plan || "free";
+    const snap = await getDoc(userRef);
+
+    let rawPlan = "free";
+    if (snap.exists()) rawPlan = snap.data().plan || "free";
+
+    // normalizza "free-logged" / "freelogged" -> "free"
+    const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
 
     if (premiumStatus) {
       show(premiumStatus);
-
       if (plan === "free") {
-        if (planInfo) planInfo.textContent = "👤 Attualmente sei su piano Free";
-        // Aggiungi CTA "Passa a Premium"
-        premiumStatus.appendChild(upgradeCTA);
+        // Free loggato → mostra CTA completa
+        premiumStatus.innerHTML = FREE_CTA_HTML;
       } else {
-        // Premium
+        // Premium → sola etichetta piano
         let label = "🎖️ Piano Premium attivo";
         if (plan === "premium300")      label = "🎖️ Piano Premium 300 attivo";
         else if (plan === "premium400") label = "🎖️ Piano Premium 400 attivo";
@@ -107,7 +102,6 @@ onAuthStateChanged(auth, async (user) => {
     }
   } catch (e) {
     console.error("Errore lettura piano utente:", e?.message || e);
-    // In caso di errore mostriamo almeno lo stato loggato base
     if (premiumStatus && planInfo) {
       show(premiumStatus);
       planInfo.textContent = "👤 Accesso effettuato";
