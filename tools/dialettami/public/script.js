@@ -113,7 +113,7 @@ function renderBadge() {
 }
 
 onAuthStateChanged(auth, async () => {
-  usage = await loadUsage(app);
+  usage = await loadUsage(app, user);
   renderBadge();
 });
 
