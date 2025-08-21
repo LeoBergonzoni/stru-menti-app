@@ -4,8 +4,11 @@
   "description": "Web app con strumenti AI: Ricettario, Be Kind, Prezzo Giusto",
   "main": "index.js",
   "license": "MIT",
+  "engines": { "node": ">=18" },
   "dependencies": {
+    "firebase-admin": "^13.4.0",
+    "node-fetch": "^2.7.0",
     "openai": "^5.10.1",
-    "node-fetch": "^2.7.0"
+    "stripe": "^18.4.0"
   }
 }
