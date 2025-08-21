@@ -34,6 +34,7 @@ exports.handler = async (event) => {
       allow_promotion_codes: true,
       success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancelUrl,
+      client_reference_id: uid || undefined,
 
       // metadata utili al webhook
       metadata: { plan, billing, uid: uid || '' },
