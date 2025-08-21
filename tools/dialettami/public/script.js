@@ -114,7 +114,7 @@ function renderBadge() {
 
 onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
-  updateCounter();
+  renderBadge(); 
 });
 
 // ===== Richiesta traduzione con controllo limiti =====

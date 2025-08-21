@@ -1,0 +1,28 @@
+<!-- premium-success.html -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grazie! – Attivazione in corso</title>
+  <link href="style.css" rel="stylesheet" />
+  <style>
+    main {max-width:520px;margin:4rem auto;text-align:center}
+    .spinner{width:28px;height:28px;border:3px solid #444;border-top-color:#fff;border-radius:50%;margin:16px auto;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🎉 Pagamento completato</h1>
+    <p>Stiamo attivando il tuo piano Premium. Tra pochi istanti verrai reindirizzato alla Home.</p>
+    <div class="spinner"></div>
+    <p style="color:#aaa;font-size:.95rem">Se non succede nulla <a href="index.html">clicca qui</a>.</p>
+  </main>
+
+  <script>
+    // piccolo redirect automatico dopo 2.5s
+    setTimeout(() => { window.location.href = "index.html?sub=ok"; }, 2500);
+  </script>
+</body>
+</html>

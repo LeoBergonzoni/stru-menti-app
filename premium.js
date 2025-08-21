@@ -7,12 +7,16 @@ const annualSection  = document.getElementById('annual');
 function showMonthly() {
   monthlyTab.classList.add('active');
   annualTab.classList.remove('active');
+  monthlyTab.setAttribute('aria-selected', 'true');
+  annualTab.setAttribute('aria-selected', 'false');
   monthlySection.style.display = 'block';
   annualSection.style.display  = 'none';
 }
 function showAnnual() {
   annualTab.classList.add('active');
   monthlyTab.classList.remove('active');
+  annualTab.setAttribute('aria-selected', 'true');
+  monthlyTab.setAttribute('aria-selected', 'false');
   annualSection.style.display  = 'block';
   monthlySection.style.display = 'none';
 }
