@@ -57,7 +57,7 @@ async function postJSON(url, data, headers = {}) {
 function requireLoginThen(plan, billing) {
   sessionStorage.setItem('postLoginCheckout', JSON.stringify({ plan, billing }));
   // porta alla home con richiesta di login (adatta se hai modale sulla Premium)
-  window.location.href = 'index.html?login=1';
+  window.location.href = 'signup';
 }
 
 // --- Auto-ripresa del checkout se si arriva con parametri (opzionale) ---
