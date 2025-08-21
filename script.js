@@ -29,20 +29,33 @@ const planInfo      = document.getElementById("plan-info");
 function show(el) { if (el) el.style.display = "block"; }
 function hide(el) { if (el) el.style.display = "none"; }
 
-// CTA HTML per free loggato
+// CTA HTML per free loggato (come blocco separato)
 const FREE_CTA_HTML = `
   <h3>🎉 Sei registrato!</h3>
   <p>Vuoi usare gli strumenti senza limiti?</p>
   <a class="btn-small" href="premium.html">🎖️ Passa a Premium</a>
 `;
+function ensureFreeCTA() {
+  let el = document.getElementById("free-cta");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "free-cta";
+    el.innerHTML = FREE_CTA_HTML;
+  }
+  return el;
+}
 
 onAuthStateChanged(auth, async (user) => {
-  // reset base
+  // reset base (NON rimuovere planInfo dal DOM!)
   if (premiumStatus) {
     premiumStatus.style.display = "none";
-    premiumStatus.innerHTML = ""; // importantissimo: puliamo tutto
   }
-  if (planInfo) planInfo.textContent = "";
+  if (planInfo) {
+    planInfo.textContent = "";
+    planInfo.style.display = ""; // assicurati sia visibile quando serve
+  }
+  // rimuovi eventuale CTA precedente
+  document.getElementById("free-cta")?.remove();
 
   if (!user) {
     // === Non loggato ===
@@ -83,27 +96,35 @@ onAuthStateChanged(auth, async (user) => {
     let rawPlan = "free";
     if (snap.exists()) rawPlan = snap.data().plan || "free";
 
-    // normalizza "free-logged" / "freelogged" -> "free"
+    // normalizza "free-logged"/"freelogged" → "free"
     const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
 
     if (premiumStatus) {
       show(premiumStatus);
+
       if (plan === "free") {
-        // Free loggato → mostra CTA completa
-        premiumStatus.innerHTML = FREE_CTA_HTML;
+        // Free loggato → Mostra CTA completa
+        if (planInfo) planInfo.style.display = "none"; // nascondi text badge
+        const cta = ensureFreeCTA();
+        if (!premiumStatus.contains(cta)) premiumStatus.appendChild(cta);
       } else {
-        // Premium → sola etichetta piano
-        let label = "🎖️ Piano Premium attivo";
-        if (plan === "premium300")      label = "🎖️ Piano Premium 300 attivo";
-        else if (plan === "premium400") label = "🎖️ Piano Premium 400 attivo";
-        else if (plan === "premiumUnlimited") label = "🎖️ Piano Premium Unlimited attivo";
-        if (planInfo) planInfo.textContent = label;
+        // Premium → mostra SOLO l'etichetta del piano
+        document.getElementById("free-cta")?.remove(); // assicura che la CTA non resti
+        if (planInfo) {
+          planInfo.style.display = ""; // assicurati sia visibile
+          let label = "🎖️ Piano Premium attivo";
+          if (plan === "premium300") label = "🎖️ Piano Premium 300 attivo";
+          else if (plan === "premium400") label = "🎖️ Piano Premium 400 attivo";
+          else if (plan === "premiumUnlimited") label = "🎖️ Piano Premium Unlimited attivo";
+          planInfo.textContent = label;
+        }
       }
     }
   } catch (e) {
     console.error("Errore lettura piano utente:", e?.message || e);
     if (premiumStatus && planInfo) {
       show(premiumStatus);
+      planInfo.style.display = "";
       planInfo.textContent = "👤 Accesso effettuato";
     }
   }
