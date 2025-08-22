@@ -43,23 +43,33 @@ async function getUidFromEmail(email) {
   }
 }
 
-async function updateUserPlan(uid, plan, billing, sub) {
-  const clicksMap = { premium300: 300, premium400: 400, premiumUnlimited: 999999999 };
-  const payload = {
+function clicksFor(plan) {
+  if (plan === 'premium300') return 300;
+  if (plan === 'premium400') return 400;
+  if (plan === 'premiumUnlimited') return 999999999;
+  return 40;
+}
+
+function subToPayload(plan, billing, sub, overrides = {}) {
+  return {
     plan,
     billing,
-    clicksPerTool: clicksMap[plan] || 300,
-    status: sub?.status || 'active',
+    clicksPerTool: clicksFor(plan),
+    status: overrides.status || (sub?.status || 'active'),
     currentPeriodStart: sub?.current_period_start ? new Date(sub.current_period_start * 1000) : admin.firestore.FieldValue.serverTimestamp(),
     currentPeriodEnd: sub?.current_period_end ? new Date(sub.current_period_end * 1000) : null,
     stripe: {
       subscriptionId: sub?.id || null,
       customer: sub?.customer || null,
       priceId: sub?.items?.data?.[0]?.price?.id || null,
-    }
+    },
+    ...overrides.extra, // per eventuali campi aggiuntivi
   };
-  await db.collection('users').doc(uid).set(payload, { merge: true });
-  console.log('[webhook] Firestore aggiornato', { uid, plan, billing, subId: payload.stripe.subscriptionId });
+}
+
+async function upsertUser(uid, data) {
+  await db.collection('users').doc(uid).set(data, { merge: true });
+  console.log('[webhook] Firestore aggiornato', { uid, plan: data.plan, status: data.status });
 }
 
 // ---- Handler ----
@@ -104,7 +114,8 @@ exports.handler = async (event) => {
         });
 
         if (uid && plan && sub) {
-          await updateUserPlan(uid, plan, billing, sub);
+          const payload = subToPayload(plan, billing, sub);
+          await upsertUser(uid, payload);
         } else {
           console.warn('[webhook] skip update (manca uid/plan/sub)', { uid, plan, hasSub: !!sub });
         }
@@ -131,19 +142,28 @@ exports.handler = async (event) => {
         const billing = sub.metadata?.billing ||
                         (sub.items?.data?.[0]?.price?.recurring?.interval === 'year' ? 'annual' : 'monthly');
 
+        const cancelAtPeriodEnd = !!sub.cancel_at_period_end;
+
         console.log('[webhook] subscription.upsert', {
-          type: stripeEvent.type, uid, plan, billing, priceId, subId: sub.id
+          type: stripeEvent.type, uid, plan, billing, priceId, subId: sub.id, cancelAtPeriodEnd
         });
 
         if (uid && plan) {
-          await updateUserPlan(uid, plan, billing, sub);
+          // Se l'utente ha scelto "annulla a fine periodo",
+          // NON declassiamo ora: manteniamo i benefici fino a current_period_end.
+          const overrides = cancelAtPeriodEnd
+            ? { status: 'canceled_at_period_end' }
+            : {};
+
+          const payload = subToPayload(plan, billing, sub, { status: overrides.status });
+          await upsertUser(uid, payload);
         } else {
           console.warn('[webhook] skip update (manca uid/plan)', { uid, plan });
         }
         break;
       }
 
-      // ---- Subscription cancellata: torna free ----
+      // ---- Subscription cancellata: downgrade a free (solo qui) ----
       case 'customer.subscription.deleted': {
         const sub = stripeEvent.data.object;
         let uid = sub.metadata?.uid || null;
@@ -154,10 +174,10 @@ exports.handler = async (event) => {
         }
 
         if (uid) {
-          await db.collection('users').doc(uid).set({
+          await upsertUser(uid, {
             plan: 'free',
             billing: null,
-            clicksPerTool: 40,
+            clicksPerTool: clicksFor('free'),
             status: 'canceled',
             currentPeriodStart: admin.firestore.FieldValue.serverTimestamp(),
             currentPeriodEnd: null,
@@ -166,7 +186,7 @@ exports.handler = async (event) => {
               customer: sub.customer,
               priceId: sub.items?.data?.[0]?.price?.id || null,
             }
-          }, { merge: true });
+          });
           console.log('[webhook] subscription.deleted -> free', { uid, subId: sub.id });
         } else {
           console.warn('[webhook] subscription.deleted: uid mancante, nessun update');
@@ -186,7 +206,7 @@ exports.handler = async (event) => {
             uid = await getUidFromEmail(customer?.email || null);
           }
           if (uid) {
-            await db.collection('users').doc(uid).set({ status: 'past_due' }, { merge: true });
+            await upsertUser(uid, { status: 'past_due' });
             console.log('[webhook] invoice.payment_failed -> past_due', { uid, subId });
           }
         }
