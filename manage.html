@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stru🧠Menti – Gestisci utenza</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <h1>Gestisci utenza</h1>
+    <h2 class="manage-subtle">Stato account, piani e sicurezza</h2>
+  </header>
+
+  <main class="manage-wrap">
+    <div id="guard-nologin" class="manage-row manage-block" style="display:none;">
+      <p>Per gestire l’utenza devi essere loggato.</p>
+      <p><a class="btn" href="login.html">Accedi</a> <a class="btn" href="signup.html">Registrati</a></p>
+    </div>
+
+    <section id="account-area" style="display:none;">
+      <div class="manage-row manage-block">
+        <h3 class="manage-title">👤 Il tuo stato</h3>
+        <p id="account-name" class="manage-subtle"></p>
+        <p id="current-plan"></p>
+      </div>
+
+      <div id="free-cta" class="manage-row manage-block" style="display:none;">
+        <h3 class="manage-title">Vuoi passare a Premium?</h3>
+        <p class="manage-subtle">Sblocca limiti più alti (o illimitati) e funzioni aggiuntive.</p>
+        <p><a class="btn btn-primary" href="premium.html">🎖️ Vedi i piani Premium</a></p>
+      </div>
+
+      <div id="premium-actions" class="manage-row manage-block" style="display:none;">
+        <h3 class="manage-title">Gestisci piano Premium</h3>
+        <p class="manage-subtle">Cambia piano direttamente dallo stato app (utile finché non colleghi un Customer Portal).</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="btn" data-plan="premium300">Premium 300</button>
+          <button class="btn" data-plan="premium400">Premium 400</button>
+          <button class="btn" data-plan="premiumUnlimited">Premium Unlimited</button>
+        </div>
+        <div style="margin-top:0.8rem;">
+          <button id="downgrade-free" class="btn btn-danger">Annulla sottoscrizione (diventa Free)</button>
+          <!-- Quando avrai Stripe: <a class="btn" href="/customer-portal">Apri area pagamenti</a> -->
+        </div>
+      </div>
+
+      <div class="manage-row manage-block">
+        <h3 class="manage-title">🔐 Sicurezza</h3>
+        <p class="manage-subtle">Azioni critiche.</p>
+        <button id="delete-account" class="btn btn-danger">Elimina account</button>
+      </div>
+
+      <div class="manage-row">
+        <a class="btn-ghost" href="index.html">← Torna alla Home</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>&copy; 2025 Stru🧠Menti — <a href="privacy.html">Privacy</a> — <a href="termini.html">Termini</a></small>
+  </footer>
+
+  <script type="module" src="manage.js"></script>
+</body>
+</html>

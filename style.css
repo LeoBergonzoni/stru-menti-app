@@ -167,6 +167,75 @@ body {
     text-align: center;
   }
 
+/* Pulsante discreto “Gestisci utenza” */
+.btn-ghost {
+  display: inline-block;
+  margin: 0 0.5rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 6px;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  border-color: #666;
+  color: #fff;
+}
+
+/* Pulsanti pagina gestisci */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #f1f1f1;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.btn:hover { background: #242424; }
+
+.btn-primary { border-color: #ffd700; }
+.btn-primary:hover { background: #2a2a2a; }
+
+.btn-danger {
+  border-color: #ff4d4d;
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #2a0000;
+}
+
+/* Layout semplice per manage */
+.manage-wrap {
+  max-width: 680px;
+  margin: 2rem auto;
+  text-align: left;
+  background: #121212;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+}
+
+.manage-row { margin: 1rem 0; }
+
+.manage-block {
+  background: #0f0f0f;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 0.9rem;
+  margin: 0.7rem 0;
+}
+
+.manage-title { margin: 0.2rem 0 0.6rem; }
+.manage-subtle { color: #bbb; font-size: 0.9rem; }
+
   @media (max-width: 480px) {
     header h1 {
       font-size: 2.2rem;

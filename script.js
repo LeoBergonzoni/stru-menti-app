@@ -21,6 +21,7 @@ const userInfoDiv     = document.getElementById("user-info");
 const plansSection    = document.getElementById("plans-section");
 const footerAuthLinks = document.getElementById("auth-links");
 const footerLogoutBtn = document.getElementById("footer-logout-btn");
+const manageBtn       = document.getElementById("manage-account-btn");
 
 // Badge piano
 const premiumStatus = document.getElementById("premium-status");
@@ -63,6 +64,7 @@ onAuthStateChanged(auth, async (user) => {
     show(plansSection);
     show(footerAuthLinks);
     hide(footerLogoutBtn);
+    if (manageBtn) manageBtn.style.display = "none"; 
     return;
   }
 
@@ -87,7 +89,8 @@ onAuthStateChanged(auth, async (user) => {
   hide(plansSection);
   hide(footerAuthLinks);
   show(footerLogoutBtn);
-
+  if (manageBtn) manageBtn.style.display = "inline-block";
+  
   // Piano attivo
   try {
     const userRef = doc(db, "users", user.uid);
