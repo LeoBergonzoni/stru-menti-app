@@ -1,11 +1,11 @@
-/ricettario        /ricettario/                               301
+/ricettario        /tools/ricettario/public/index.html        200
 /ricettario/*      /tools/ricettario/public/:splat            200
 
-/bekind            /bekind/                                   301
+/bekind            /tools/bekind/public/index.html            200
 /bekind/*          /tools/bekind/public/:splat                200
 
-/dialettami        /dialettami/                               301
+/dialettami        /tools/dialettami/public/index.html        200
 /dialettami/*      /tools/dialettami/public/:splat            200
 
-/prezzogiusto      /prezzogiusto/                             301
+/prezzogiusto      /tools/prezzogiusto/public/index.html      200
 /prezzogiusto/*    /tools/prezzogiusto/public/:splat          200
