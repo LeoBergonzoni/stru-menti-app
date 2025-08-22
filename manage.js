@@ -13,7 +13,7 @@ import {
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// --- Firebase config (stessa del progetto) ---
+// --- Firebase config ---
 const firebaseConfig = {
   apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
   authDomain: "stru-menti.firebaseapp.com",
@@ -35,9 +35,12 @@ const currentPlanEl  = document.getElementById("current-plan");
 const freeCta        = document.getElementById("free-cta");
 const premiumActions = document.getElementById("premium-actions");
 const deleteBtn      = document.getElementById("delete-account");
-const downgradeBtn   = document.getElementById("downgrade-free"); // non usato con Stripe ma lasciato se presente in HTML
+const downgradeBtn   = document.getElementById("downgrade-free"); // non usato con Stripe
 
-// Helpers
+// --- Costanti ---
+const GENERIC_PORTAL_URL = "https://billing.stripe.com/p/login/test_8x29ANaOVdBF6Y0gFzb7y00";
+
+// Helpers UI
 function show(el){ if(el) el.style.display = ""; }
 function hide(el){ if(el) el.style.display = "none"; }
 function btn(label, className = "btn", attrs = {}) {
@@ -57,17 +60,18 @@ async function goCheckout(plan, billing, uid, email) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan, billing, uid, email }),
     });
-    if (!res.ok) throw new Error("createCheckout failed");
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    else throw new Error("No checkout url");
+    const text = await res.text();
+    let data; try { data = JSON.parse(text); } catch { data = {}; }
+    if (!res.ok) throw new Error(data.error || data.message || "createCheckout failed");
+    if (!data.url) throw new Error("No checkout url");
+    window.location.href = data.url;
   } catch (e) {
     console.error(e);
-    alert("Errore nell'apertura del Checkout.");
+    alert("Errore nell'apertura del Checkout.\n" + (e.message || ""));
   }
 }
 
-// Stripe — Customer Portal (fallback se il file si chiama createPortl.js)
+// Stripe — Customer Portal (preferito: sessione per customerId)
 async function openPortal(customerId) {
   async function call(endpoint) {
     const r = await fetch(endpoint, {
@@ -75,25 +79,26 @@ async function openPortal(customerId) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ customerId }),
     });
-    if (!r.ok) throw new Error(endpoint + " failed");
-    const { url } = await r.json();
-    if (!url) throw new Error("No portal url");
-    window.location.href = url;
+    const text = await r.text();
+    let data; try { data = JSON.parse(text); } catch { data = {}; }
+    if (!r.ok) throw new Error(`${endpoint} failed: ${data.message || data.error || text}`);
+    if (!data.url) throw new Error("No portal url");
+    window.location.href = data.url;
   }
   try {
     await call("/.netlify/functions/createPortal");
   } catch (_) {
     try {
+      // fallback se la function è nominata diversamente
       await call("/.netlify/functions/createPortl");
     } catch (e2) {
       console.error(e2);
-      alert("Errore nell'apertura del Customer Portal.");
+      alert("Errore nell'apertura del Customer Portal.\n" + (e2.message || ""));
     }
   }
 }
 
-// (Opzionale) vecchia utility per scrivere direttamente il piano su Firestore.
-// Con Stripe NON la usiamo per cambiare piano, ma la teniamo per eventuali fallback.
+// (Facoltativa) utility legacy setPlan per fallback manuali
 async function setPlan(uid, plan) {
   const uref = doc(db, "users", uid);
   const snap = await getDoc(uref);
@@ -104,7 +109,7 @@ async function setPlan(uid, plan) {
   }
 }
 
-// Banner di stato da query (?status=success|cancel)
+// Banner da query (?status=success|cancel)
 (function handleQueryBanner(){
   const params = new URLSearchParams(location.search);
   const status = params.get("status");
@@ -112,9 +117,9 @@ async function setPlan(uid, plan) {
   const wrap = document.createElement("div");
   wrap.className = "manage-block";
   wrap.style.borderColor = status === "success" ? "#2e7d32" : "#8a2e2e";
-  wrap.textContent = status === "success" ?
-    "Pagamento completato correttamente. Il piano verrà aggiornato tra pochi istanti." :
-    "Operazione annullata.";
+  wrap.textContent = status === "success"
+    ? "Pagamento completato. Il piano verrà aggiornato tra pochi istanti."
+    : "Operazione annullata.";
   const main = document.querySelector("main.manage-wrap") || document.body;
   main.insertBefore(wrap, main.firstChild);
 })();
@@ -128,7 +133,7 @@ onAuthStateChanged(auth, async (user) => {
   hide(guardNoLogin);
   show(accountArea);
 
-  // Mostra nome e piano attuale
+  // Nome e piano
   let displayName = user.displayName || user.email;
   try {
     const uref = doc(db, "users", user.uid);
@@ -136,7 +141,6 @@ onAuthStateChanged(auth, async (user) => {
     let data = usnap.exists() ? usnap.data() : null;
     if (data?.firstName) displayName = data.firstName;
 
-    // Piano corrente (normalizzato)
     const rawPlan = data?.plan || "free";
     const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
 
@@ -148,15 +152,13 @@ onAuthStateChanged(auth, async (user) => {
       plan === "premiumUnlimited" ? "Stato attuale: 🎖️ Premium Unlimited" :
       `Stato attuale: ${plan}`;
 
-    // PULIZIA contenitori dinamici
+    // pulizia contenitori
     if (freeCta) clear(freeCta);
     if (premiumActions) clear(premiumActions);
 
-    // UI in base al piano (Stripe-first)
     if (plan === "free") {
-      // Sezione FREE: mostra scelte di upgrade via Checkout (mensile/annuale)
-      show(freeCta);
-      hide(premiumActions);
+      // --- Sezione FREE: bottoni Checkout mensile/annuale ---
+      show(freeCta); hide(premiumActions);
 
       const title = document.createElement("h3");
       title.className = "manage-title";
@@ -195,9 +197,8 @@ onAuthStateChanged(auth, async (user) => {
       freeCta.append(title, sub, rowMonthly, rowAnnual);
 
     } else {
-      // Sezione PREMIUM: mostra Customer Portal (upgrade/downgrade/cancel su Stripe)
-      hide(freeCta);
-      show(premiumActions);
+      // --- Sezione PREMIUM: Customer Portal ---
+      hide(freeCta); show(premiumActions);
 
       const title = document.createElement("h3");
       title.className = "manage-title";
@@ -212,12 +213,14 @@ onAuthStateChanged(auth, async (user) => {
       note.className = "manage-subtle";
 
       const customerId = data?.stripe?.customer || data?.stripeCustomerId || null;
+
       if (customerId) {
-        portalBtn.onclick = () => openPortal(customerId);
+        portalBtn.onclick = () => openPortal(customerId); // sessione customer-specific
         note.textContent = "Verrai reindirizzato su Stripe. Al termine, tornerai qui.";
       } else {
-        portalBtn.disabled = true;
-        note.textContent = "Dati cliente Stripe non trovati. Completa un acquisto o contatta il supporto.";
+        // Fallback: link generico al Portale (login via email)
+        portalBtn.onclick = () => window.location.href = GENERIC_PORTAL_URL;
+        note.textContent = "Non trovo il tuo ID cliente Stripe. Ti porto al portale: effettua il login via email.";
       }
 
       premiumActions.classList.add("manage-block");
@@ -228,7 +231,6 @@ onAuthStateChanged(auth, async (user) => {
     console.error("Errore lettura piano:", e?.message || e);
     accountNameEl.textContent = `Ciao, ${displayName}!`;
     currentPlanEl.textContent = "Stato attuale: Accesso effettuato";
-    // fallback: mostra freeCta base
     if (freeCta) {
       clear(freeCta);
       freeCta.classList.add("manage-block");
@@ -242,39 +244,32 @@ onAuthStateChanged(auth, async (user) => {
     if (premiumActions) hide(premiumActions);
   }
 
-  // (DISABILITATO) Downgrade diretto su Firestore: ora si fa dal Portal
-  if (downgradeBtn) {
-    downgradeBtn.style.display = "none";
-  }
+  // Nascondi eventuale bottone di downgrade manuale (ora si fa da Portal)
+  if (downgradeBtn) downgradeBtn.style.display = "none";
 
- // Eliminazione account
-if (deleteBtn) {
-  deleteBtn.onclick = async () => {
-    const step1 = confirm("⚠️ ATTENZIONE: questa azione è irreversibile. Vuoi procedere con l’eliminazione dell’account?");
-    if (!step1) return;
-    const step2 = confirm("Confermi definitivamente l’eliminazione? Tutti i dati collegati verranno rimossi.");
-    if (!step2) return;
+  // Eliminazione account
+  if (deleteBtn) {
+    deleteBtn.onclick = async () => {
+      const step1 = confirm("⚠️ ATTENZIONE: questa azione è irreversibile. Vuoi procedere con l’eliminazione dell’account?");
+      if (!step1) return;
+      const step2 = confirm("Confermi definitivamente l’eliminazione? Tutti i dati collegati verranno rimossi.");
+      if (!step2) return;
 
-    try {
-      // 1) elimina doc utente (se presente)
-      try { await deleteDoc(doc(db, "users", user.uid)); } catch(_) {}
-
-      // 2) elimina utente Firebase (usa SEMPRE 'user' passato dal listener, NON auth.currentUser)
-      await deleteUser(user);
-
-      alert("Account eliminato correttamente.");
-      window.location.href = "index.html";
-    } catch (err) {
-      console.error(err);
-      // Questo errore non si può "togliere": è una protezione di Firebase.
-      if (err?.code === "auth/requires-recent-login") {
-        alert("Per motivi di sicurezza devi rieseguire l’accesso e poi riprovare a eliminare l’account.");
-        // opzionale: redirect alla login con ritorno automatico a manage
-        // window.location.href = "login.html?returnTo=manage.html&action=delete";
-      } else {
-        alert("Errore nell’eliminazione dell’account.");
+      try {
+        // elimina doc utente (se presente)
+        try { await deleteDoc(doc(db, "users", auth.currentUser.uid)); } catch(_) {}
+        // elimina utente Firebase
+        await deleteUser(auth.currentUser);
+        alert("Account eliminato correttamente.");
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error(err);
+        if (err?.code === "auth/requires-recent-login") {
+          alert("Per motivi di sicurezza devi rieseguire l’accesso e poi riprovare a eliminare l’account.");
+        } else {
+          alert("Errore nell’eliminazione dell’account.");
+        }
       }
-    }
-  };
-}
+    };
+  }
 });

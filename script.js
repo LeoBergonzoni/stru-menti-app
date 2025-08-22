@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // Config Firebase
 const firebaseConfig = {
@@ -30,7 +30,7 @@ const planInfo      = document.getElementById("plan-info");
 function show(el) { if (el) el.style.display = "block"; }
 function hide(el) { if (el) el.style.display = "none"; }
 
-// CTA HTML per free loggato (come blocco separato)
+// CTA HTML per free loggato
 const FREE_CTA_HTML = `
   <h3>🎉 Sei registrato!</h3>
   <p>Vuoi usare gli strumenti senza limiti?</p>
@@ -47,15 +47,9 @@ function ensureFreeCTA() {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  // reset base (NON rimuovere planInfo dal DOM!)
-  if (premiumStatus) {
-    premiumStatus.style.display = "none";
-  }
-  if (planInfo) {
-    planInfo.textContent = "";
-    planInfo.style.display = ""; // assicurati sia visibile quando serve
-  }
-  // rimuovi eventuale CTA precedente
+  // reset base
+  if (premiumStatus) premiumStatus.style.display = "none";
+  if (planInfo) { planInfo.textContent = ""; planInfo.style.display = ""; }
   document.getElementById("free-cta")?.remove();
 
   if (!user) {
@@ -64,12 +58,31 @@ onAuthStateChanged(auth, async (user) => {
     show(plansSection);
     show(footerAuthLinks);
     hide(footerLogoutBtn);
-    if (manageBtn) manageBtn.style.display = "none"; 
+    if (manageBtn) manageBtn.style.display = "none";
     return;
   }
 
   // === Loggato ===
-  // Saluto con nome
+  // 1) Assicura che esista SEMPRE users/{uid} con plan: "free"
+  try {
+    const uref = doc(db, "users", user.uid);
+    const usnap = await getDoc(uref);
+    if (!usnap.exists()) {
+      await setDoc(uref, {
+        plan: "free",
+        billing: null,
+        clicksPerTool: 40,
+        createdAt: new Date(),
+        email: user.email || null,
+        firstName: (user.displayName?.split(" ")[0]) || null
+      }, { merge: true });
+      // opzionale: console.log("Creato doc utente Firestore per", user.uid);
+    }
+  } catch (e) {
+    console.warn("Impossibile creare il doc utente:", e?.message || e);
+  }
+
+  // 2) Saluto con nome
   if (userInfoDiv) {
     let name = user.displayName || user.email;
     try {
@@ -90,31 +103,27 @@ onAuthStateChanged(auth, async (user) => {
   hide(footerAuthLinks);
   show(footerLogoutBtn);
   if (manageBtn) manageBtn.style.display = "inline-block";
-  
-  // Piano attivo
+
+  // 3) Piano attivo per badge/CTA
   try {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
     let rawPlan = "free";
     if (snap.exists()) rawPlan = snap.data().plan || "free";
-
-    // normalizza "free-logged"/"freelogged" → "free"
     const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
 
     if (premiumStatus) {
       show(premiumStatus);
 
       if (plan === "free") {
-        // Free loggato → Mostra CTA completa
-        if (planInfo) planInfo.style.display = "none"; // nascondi text badge
+        if (planInfo) planInfo.style.display = "none";
         const cta = ensureFreeCTA();
         if (!premiumStatus.contains(cta)) premiumStatus.appendChild(cta);
       } else {
-        // Premium → mostra SOLO l'etichetta del piano
-        document.getElementById("free-cta")?.remove(); // assicura che la CTA non resti
+        document.getElementById("free-cta")?.remove();
         if (planInfo) {
-          planInfo.style.display = ""; // assicurati sia visibile
+          planInfo.style.display = "";
           let label = "🎖️ Piano Premium attivo";
           if (plan === "premium300") label = "🎖️ Piano Premium 300 attivo";
           else if (plan === "premium400") label = "🎖️ Piano Premium 400 attivo";
