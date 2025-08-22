@@ -264,13 +264,6 @@ onAuthStateChanged(auth, async (user) => {
 
         alert("Account eliminato correttamente.");
         window.location.href = "index.html";
-      } catch (err) {
-        console.error(err);
-        if (err?.code === "auth/requires-recent-login") {
-          alert("Per motivi di sicurezza devi eseguire nuovamente l’accesso e poi riprovare a eliminare l’account.");
-        } else {
-          alert("Errore nell’eliminazione dell’account.");
-        }
       }
     };
   }
