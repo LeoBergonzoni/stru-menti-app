@@ -247,24 +247,34 @@ onAuthStateChanged(auth, async (user) => {
     downgradeBtn.style.display = "none";
   }
 
-  // Eliminazione account
-  if (deleteBtn) {
-    deleteBtn.onclick = async () => {
-      const step1 = confirm("⚠️ ATTENZIONE: questa azione è irreversibile. Vuoi procedere con l’eliminazione dell’account?");
-      if (!step1) return;
-      const step2 = confirm("Confermi definitivamente l’eliminazione? Tutti i dati collegati verranno rimossi.");
-      if (!step2) return;
+ // Eliminazione account
+if (deleteBtn) {
+  deleteBtn.onclick = async () => {
+    const step1 = confirm("⚠️ ATTENZIONE: questa azione è irreversibile. Vuoi procedere con l’eliminazione dell’account?");
+    if (!step1) return;
+    const step2 = confirm("Confermi definitivamente l’eliminazione? Tutti i dati collegati verranno rimossi.");
+    if (!step2) return;
 
-      try {
-        // 1) elimina doc utente (se presente)
-        try { await deleteDoc(doc(db, "users", auth.currentUser.uid)); } catch(_) {}
+    try {
+      // 1) elimina doc utente (se presente)
+      try { await deleteDoc(doc(db, "users", user.uid)); } catch(_) {}
 
-        // 2) elimina utente Firebase
-        await deleteUser(auth.currentUser);
+      // 2) elimina utente Firebase (usa SEMPRE 'user' passato dal listener, NON auth.currentUser)
+      await deleteUser(user);
 
-        alert("Account eliminato correttamente.");
-        window.location.href = "index.html";
+      alert("Account eliminato correttamente.");
+      window.location.href = "index.html";
+    } catch (err) {
+      console.error(err);
+      // Questo errore non si può "togliere": è una protezione di Firebase.
+      if (err?.code === "auth/requires-recent-login") {
+        alert("Per motivi di sicurezza devi rieseguire l’accesso e poi riprovare a eliminare l’account.");
+        // opzionale: redirect alla login con ritorno automatico a manage
+        // window.location.href = "login.html?returnTo=manage.html&action=delete";
+      } else {
+        alert("Errore nell’eliminazione dell’account.");
       }
-    };
-  }
+    }
+  };
+}
 });
