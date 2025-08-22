@@ -18,7 +18,7 @@ export async function loadUsage(app, userFromCaller = null) {
   const user = userFromCaller ?? auth.currentUser;
 
   let planLabel = "Anonimo";
-  let maxClicks = 5;
+  let maxClicks = 10;
   let monthlyClicks = 0;
 
   if (!user) {
