@@ -7,7 +7,7 @@ body {
 }
 
 .container {
-  max-width: 600px;
+  max-width: 900px; /* più largo per la griglia output */
   margin: auto;
   background: #fff3e6;
   padding: 2rem;
@@ -17,7 +17,13 @@ body {
 
 h1 { text-align: center; color: #e57f3a; }
 
-.description { text-align: center; margin-bottom: 1.5rem; }
+.description { text-align: center; margin-bottom: 1rem; }
+
+/* Tabs modalità */
+.mode-switch{ display:flex; gap:.5rem; justify-content:center; margin: .5rem 0 0.25rem; }
+.mode-tab{ border:1px solid #e0b396; background:#fff; padding:.4rem .8rem; border-radius:999px; cursor:pointer; font-weight:600 }
+.mode-tab.active{ background:#e57f3a; color:#fff; border-color:#e57f3a }
+.mode-desc{ text-align:center; margin:.25rem 0 1rem; color:#7b5542 }
 
 form { display: flex; flex-direction: column; gap: 1rem; }
 
@@ -28,27 +34,27 @@ form { display: flex; flex-direction: column; gap: 1rem; }
 
 select, button { padding: 0.7rem; border-radius: 8px; border: none; font-size: 16px; }
 
-#add-ingredient {
-  align-self: start; background-color: #ffddb0; border: none;
-  padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
-}
+#add-ingredient { align-self: start; background-color: #ffddb0; border: none; padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+#remove-ingredient { align-self: start; background-color: #ffd0c0; border: none; padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
 
-#generate-recipe { background-color: #e57f3a; color: #fff; cursor: pointer; margin-top: 1rem; }
+#generate-recipe { background-color: #e57f3a; color: #fff; cursor: pointer; margin-top: 0.5rem; }
 
-#recipe-output {
-  margin-top: 2rem; background: #fff; padding: 1.5rem; border-radius: 1rem;
-  border: 1px dashed #e57f3a; animation: fadeIn .6s ease-in-out;
-}
-#recipe-output h2 { color: #e57f3a; font-size: 1.4rem; margin-bottom: 1rem; }
-
+/* Output cards + griglia */
+.outputs-grid{ display:grid; grid-template-columns: 1fr; gap:1rem; margin-top:1.25rem }
+.card{ background:#fff; padding: 1.25rem; border-radius: 1rem; border:1px dashed #e57f3a; animation: fadeIn .6s ease-in-out; }
+#recipe-title{ color:#e57f3a; font-size:1.4rem; margin:0 0 .5rem; }
 .actions { margin-top: 1rem; display: flex; gap: 1rem; }
 .actions button { background-color: #f0c28b; color: #4b2e2e; cursor: pointer; flex: 1; font-size: 16px; }
 
 .ingredient-buttons { display: flex; gap: .5rem; margin-bottom: 1rem; }
-
 .hidden { display: none; }
 
 @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* Responsive: affianca ricetta e lista su schermi medi */
+@media (min-width: 820px){
+  .outputs-grid{ grid-template-columns: 1fr 0.8fr; }
+}
 
 /* Smartphone */
 @media (max-width: 480px){
@@ -66,26 +72,14 @@ select, button { padding: 0.7rem; border-radius: 8px; border: none; font-size: 1
 #bottom-nav a:hover { opacity:1; }
 
 /* Footer */
-footer {
-  text-align: center; font-size: .75rem; color: #a47b63;
-  margin: 2rem auto 1rem; max-width: 600px; padding: 0 1rem;
-}
+footer { text-align: center; font-size: .75rem; color: #a47b63; margin: 2rem auto 1rem; max-width: 900px; padding: 0 1rem; }
 @media (max-width: 480px){ footer{ font-size:.7rem } }
 
 /* ====== MODALE (vanilla) ====== */
-.modal-overlay{
-  position: fixed; inset: 0;
-  display: none; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.6); padding: 16px; z-index: 2000;
-}
+.modal-overlay{ position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.6); padding: 16px; z-index: 2000; }
 .modal-overlay.active{ display:flex; }
 
-.modal-card{
-  max-width: 28rem; width: 100%;
-  background: #fff; color: #1f2937;
-  border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
-  padding: 20px; text-align: left;
-}
+.modal-card{ max-width: 28rem; width: 100%; background: #fff; color: #1f2937; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: 20px; text-align: left; }
 .modal-card h3{ margin:0 0 .5rem; font-size:1.1rem; }
 .modal-card p{ margin:0 0 1rem; font-size:.95rem; }
 .modal-actions{ display:flex; gap:.6rem; justify-content:flex-end; }

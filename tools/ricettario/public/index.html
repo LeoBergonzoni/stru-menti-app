@@ -11,12 +11,7 @@
 
   <style>
     /* Cookie banner */
-    #cookie-banner{
-      position:fixed;bottom:0;left:0;width:100%;
-      background:#fff3e6;color:#4b2e2e;padding:0.8rem 1rem;
-      text-align:center;font-size:0.85rem;box-shadow:0 -2px 5px rgba(0,0,0,.05);
-      z-index:1000;display:flex;flex-direction:column;gap:.5rem
-    }
+    #cookie-banner{ position:fixed;bottom:0;left:0;width:100%; background:#fff3e6;color:#4b2e2e;padding:0.8rem 1rem; text-align:center;font-size:0.85rem;box-shadow:0 -2px 5px rgba(0,0,0,.05); z-index:1000;display:flex;flex-direction:column;gap:.5rem }
     #cookie-banner button{background:#e57f3a;color:#fff;border:0;padding:.4rem 1rem;border-radius:6px;cursor:pointer;align-self:center}
     @media(min-width:500px){#cookie-banner{flex-direction:row;justify-content:center;align-items:center}#cookie-banner button{margin-left:1rem;margin-top:0}}
     /* toggle modale */
@@ -28,18 +23,28 @@
   <div class="container">
     <h1>🍝 Il Ricettario</h1>
     <p class="description">
-      Non sai cosa preparare? Scrivici cos’hai in frigo o in credenza e ti daremo una semplice ricetta da preparare in pochi minuti.
+      Non sai cosa preparare? Scegli la modalità e inserisci gli ingredienti.
+    </p>
+
+    <!-- Switch modalità -->
+    <div class="mode-switch" role="tablist" aria-label="Modalità Ricettario">
+      <button class="mode-tab active" data-mode="svuota" role="tab" aria-selected="true">🥫 Svuota frigo</button>
+      <button class="mode-tab" data-mode="fantasia" role="tab" aria-selected="false">👨‍🍳 Fantasia dell’AI Chef</button>
+    </div>
+    <p class="mode-desc" id="mode-desc">
+      Inserisci gli ingredienti <strong>esatti</strong> per ottenere la tua ricetta con quello che hai in casa.
     </p>
 
     <form id="ingredients-form">
       <div id="ingredient-fields">
+        <!-- Per Svuota frigo partiamo con 2 campi -->
         <input type="text" name="ingredient" placeholder="Ingrediente 1" required />
         <input type="text" name="ingredient" placeholder="Ingrediente 2" required />
       </div>
 
       <div class="ingredient-buttons">
-        <button type="button" id="add-ingredient">➕</button>
-        <button type="button" id="remove-ingredient">➖</button>
+        <button type="button" id="add-ingredient" aria-label="Aggiungi ingrediente">➕</button>
+        <button type="button" id="remove-ingredient" aria-label="Rimuovi ingrediente">➖</button>
       </div>
 
       <label for="location">Dove la mangi?</label>
@@ -51,12 +56,22 @@
       <button type="submit" id="generate-recipe">🍳 Prepara</button>
     </form>
 
-    <div id="recipe-output" class="hidden">
-      <h2></h2>
-      <div id="recipe-text"></div>
-      <div class="actions">
-        <button id="new-recipe">🔁 Nuova ricetta</button>
-        <button id="copy-recipe">📋 Copia</button>
+    <div id="outputs-wrap" class="outputs-grid hidden">
+      <div id="recipe-output" class="card">
+        <h2 id="recipe-title"></h2>
+        <div id="recipe-text"></div>
+        <div class="actions">
+          <button id="new-recipe">🔁 Nuova ricetta</button>
+          <button id="copy-recipe">📋 Copia</button>
+        </div>
+      </div>
+
+      <div id="shopping-output" class="card hidden" aria-live="polite">
+        <h2>🧾 Ingredienti e dosi</h2>
+        <div id="shopping-text"></div>
+        <div class="actions">
+          <button id="copy-shopping">📋 Copia lista</button>
+        </div>
       </div>
     </div>
   </div>
