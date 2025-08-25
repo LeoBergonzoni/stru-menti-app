@@ -7,7 +7,7 @@ body {
 }
 
 .container {
-  max-width: 900px; /* più largo per la griglia output */
+  max-width: 600px; /* compatto come “prima” */
   margin: auto;
   background: #fff3e6;
   padding: 2rem;
@@ -32,14 +32,18 @@ form { display: flex; flex-direction: column; gap: 1rem; }
   border: 1px solid #e0b396; border-radius: 8px; font-size: 16px;
 }
 
-select, button { padding: 0.7rem; border-radius: 8px; border: none; font-size: 16px; }
+select, button { padding: 0.6rem 1rem; border-radius: 8px; border: none; font-size: 16px; }
 
 #add-ingredient { align-self: start; background-color: #ffddb0; border: none; padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
 #remove-ingredient { align-self: start; background-color: #ffd0c0; border: none; padding: 0.5rem 1rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
 
-#generate-recipe { background-color: #e57f3a; color: #fff; cursor: pointer; margin-top: 0.5rem; }
+/* bottone Prepara non “allungato” */
+#generate-recipe {
+  background-color: #e57f3a; color: #fff; cursor: pointer; margin-top: 0.5rem;
+  width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; padding: 0.7rem;
+}
 
-/* Output cards + griglia */
+/* Output cards + griglia (se presente) */
 .outputs-grid{ display:grid; grid-template-columns: 1fr; gap:1rem; margin-top:1.25rem }
 .card{ background:#fff; padding: 1.25rem; border-radius: 1rem; border:1px dashed #e57f3a; animation: fadeIn .6s ease-in-out; }
 #recipe-title{ color:#e57f3a; font-size:1.4rem; margin:0 0 .5rem; }
@@ -72,7 +76,7 @@ select, button { padding: 0.7rem; border-radius: 8px; border: none; font-size: 1
 #bottom-nav a:hover { opacity:1; }
 
 /* Footer */
-footer { text-align: center; font-size: .75rem; color: #a47b63; margin: 2rem auto 1rem; max-width: 900px; padding: 0 1rem; }
+footer { text-align: center; font-size: .75rem; color: #a47b63; margin: 2rem auto 1rem; max-width: 600px; padding: 0 1rem; }
 @media (max-width: 480px){ footer{ font-size:.7rem } }
 
 /* ====== MODALE (vanilla) ====== */

@@ -41,29 +41,41 @@ let currentMode = 'svuota'; // 'svuota' | 'fantasia'
 function setMode(mode){
   currentMode = mode;
   modeTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+
   if(mode === 'svuota'){
     modeDesc.innerHTML = 'Inserisci gli ingredienti <strong>esatti</strong> per ottenere la tua ricetta con quello che hai in casa.';
     ensureInputs(2); // minimo 2 campi
+    trimInputsTo(2); // se arrivo da “fantasia”, torna a 2
   } else {
     modeDesc.innerHTML = 'Inserisci uno o più <strong>macro ingredienti</strong> per scatenare la fantasia dello chef: preparati a fare la spesa!';
     ensureInputs(1); // minimo 1 campo
+    trimInputsTo(1); // 👈 mostra 1 campo di default
   }
-  outputsWrap.classList.add('hidden');
+
+  outputsWrap?.classList?.add('hidden');
 }
 modeTabs.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
 
 function ensureInputs(min){
-  // Mantiene almeno "min" input, rimuove required in eccesso coerentemente
-  const inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
-  // Aggiungi se mancano
+  // Mantiene almeno "min" input e imposta i required
+  let inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
   while(inputs.length < min){
     addIngredientField();
+    inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
   }
-  // Rendi i primi min required, gli altri no
   ingredientContainer.querySelectorAll("input[name='ingredient']").forEach((inp, idx)=>{
     inp.required = idx < min;
     inp.placeholder = `Ingrediente ${idx+1}`;
   });
+}
+
+function trimInputsTo(n){
+  // Riduce il numero di input visibili a n (mantiene i valori dei primi n)
+  let inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
+  while (inputs.length > n) {
+    ingredientContainer.removeChild(inputs[inputs.length - 1]);
+    inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
+  }
 }
 
 function addIngredientField(){
@@ -98,7 +110,10 @@ const footer = document.querySelector("footer");
 if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
 let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };
-function updateCounter(){ const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks; counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`; }
+function updateCounter(){
+  const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
+  counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`;
+}
 
 onAuthStateChanged(auth, async (user) => { usage = await loadUsage(app, user); updateCounter(); });
 
@@ -112,7 +127,8 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  const ingredients = Array.from(document.querySelectorAll("input[name='ingredient']")).map(i => i.value.trim()).filter(Boolean);
+  const ingredients = Array.from(document.querySelectorAll("input[name='ingredient']"))
+    .map(i => i.value.trim()).filter(Boolean);
   const location = locationSelect.value;
   const min = currentMode === 'svuota' ? 2 : 1;
   if (ingredients.length < min){
