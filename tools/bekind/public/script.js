@@ -37,6 +37,17 @@ counterDiv.style.cssText = "text-align:center; margin-top:2rem; font-size:0.85re
 const footer = document.querySelector("footer");
 if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
+const authLinks = document.createElement('p');
+authLinks.id = 'auth-links';
+authLinks.style.cssText = "text-align:center; margin:.25rem 0 0; font-size:0.9rem;";
+authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
+counterDiv.after(authLinks);
+authLinks.hidden = true; // mostrali solo se anonimo
+
+function showAuthLinks(isAnon){
+  authLinks.hidden = !isAnon;
+}
+
 function updateCounter() {
   const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
   counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`;
@@ -45,7 +56,7 @@ function updateCounter() {
 // Carica piano + contatore globale quando cambia l’auth
 onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
-  updateCounter();
+  updateCounter(); showAuthLinks(!user)
 });
 
 closeLimit?.addEventListener("click", () => {
