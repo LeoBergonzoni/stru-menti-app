@@ -121,7 +121,7 @@ if (footer) document.body.insertBefore(counterDiv, footer); else document.body.a
 const authLinks = document.createElement('p');
 authLinks.id = 'auth-links';
 authLinks.style.cssText = "text-align:center; margin:.25rem 0 0; font-size:0.9rem;";
-authLinks.innerHTML = `<a href="login.html">Accedi</a> | <a href="signup.html">Registrati</a>`;
+authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
 counterDiv.after(authLinks);
 authLinks.hidden = true; // mostrali solo se anonimo
 
