@@ -7,40 +7,68 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .fav-wrap{max-width:760px;margin:2rem auto;background:#fff3e6;padding:1.25rem;border-radius:1rem;box-shadow:0 0 10px rgba(0,0,0,.08)}
+    .topbar{display:flex;gap:.75rem;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+    .badge{background:#e57f3a;color:#fff;border-radius:999px;padding:.2rem .55rem;font-size:.85rem}
+    .actions-top{display:flex;gap:.5rem;align-items:center}
+    .btn{border:none;border-radius:8px;padding:.45rem .7rem;cursor:pointer}
+    .btn-clear{background:#ffd0c0}
     .fav-card{background:#fff;border:1px dashed #e57f3a;border-radius:1rem;padding:1rem;margin-bottom:1rem}
     .fav-title{margin:0 0 .5rem;color:#e57f3a}
     .fav-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
-    .btn{border:none;border-radius:8px;padding:.45rem .7rem;cursor:pointer}
     .btn-copy{background:#f0c28b}
     .btn-del{background:#ffd0c0}
     .empty{opacity:.7;text-align:center;padding:1rem}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
     a { color: inherit; }
   </style>
 </head>
 <body>
   <div class="fav-wrap">
     <div class="topbar">
-      <h1 style="margin:0">⭐ Le mie ricette</h1>
-      <a href="./" style="text-decoration:none">↩︎ Torna al Ricettario</a>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <h1 style="margin:0">⭐ Le mie ricette</h1>
+        <span id="cap-badge" class="badge">0/5</span>
+      </div>
+      <div class="actions-top">
+        <a href="./" style="text-decoration:none">↩︎ Torna al Ricettario</a>
+        <button id="clear-all" class="btn btn-clear" title="Rimuovi tutte le ricette salvate">🗑️ Svuota tutti</button>
+      </div>
     </div>
+
     <div id="fav-list"></div>
   </div>
 
   <script>
+    const KEY = 'ricettario:favorites';
+    const CAP = 5;
+
     function loadFavs(){
-      try { return JSON.parse(localStorage.getItem('ricettario:favorites') || '[]'); }
+      try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
       catch { return []; }
     }
-    function saveFavs(list){ localStorage.setItem('ricettario:favorites', JSON.stringify(list)); }
+    function saveFavs(list){
+      // Mantieni il cap anche qui per robustezza
+      if(list.length > CAP) list = list.slice(0, CAP);
+      localStorage.setItem(KEY, JSON.stringify(list));
+    }
+
+    function setBadge(n){
+      const el = document.getElementById('cap-badge');
+      el.textContent = `${n}/${CAP}`;
+      el.style.background = n >= CAP ? '#d9534f' : '#e57f3a'; // rosso se pieno
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
     function render(){
       const root = document.getElementById('fav-list');
       const favs = loadFavs();
+      setBadge(favs.length);
+
       if(!favs.length){
         root.innerHTML = '<p class="empty">Non hai ancora salvato nessuna ricetta. Torna al Ricettario e usa la stellina ⭐ per salvarle.</p>';
         return;
       }
+
       root.innerHTML = '';
       favs.forEach((f, idx) => {
         const card = document.createElement('div');
@@ -79,7 +107,11 @@
       });
     }
 
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    document.getElementById('clear-all').addEventListener('click', () => {
+      if (!confirm('Vuoi davvero rimuovere tutte le ricette salvate?')) return;
+      saveFavs([]);
+      render();
+    });
 
     render();
   </script>

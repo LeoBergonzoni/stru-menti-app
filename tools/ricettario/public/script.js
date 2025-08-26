@@ -56,6 +56,7 @@ function setMode(mode){
   }
 
   outputsWrap?.classList?.add('hidden');
+  outputsWrap?.classList?.remove('single'); // reset centratura quando cambio modalità
 }
 modeTabs.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
 
@@ -166,20 +167,25 @@ form.addEventListener("submit", async (e) => {
         recipeText.textContent = parsed.instructions;
         shoppingText.innerHTML = renderShoppingList(parsed.shopping_list);
         shoppingOutput.classList.remove('hidden');
+        outputsWrap.classList.remove('single');
       } else {
         const { title, body, shopping } = fallbackSplitFantasia(data.message);
         recipeTitleEl.textContent = `🍽️ ${title}`;
         recipeText.textContent = body;
         shoppingText.innerHTML = shopping || '<em>Lista non disponibile.</em>';
         shoppingOutput.classList.remove('hidden');
+        outputsWrap.classList.remove('single');
       }
     } else {
       const [titleLine, ...rest] = data.message.split('\n');
-      const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').trim();
+      const cleanTitle = titleLine.replace(/^["#*\- ]+/, '').replace(/\*\*/g,'').trim();
       const body = rest.join('\n').trim();
       recipeTitleEl.textContent = `🍽️ ${cleanTitle}`;
-      recipeText.textContent = body;
+      recipeText.innerHTML = renderSvuotaHTML(body); // 👈 formattazione pulita
       shoppingOutput.classList.add('hidden');
+      
+      // centra la scheda quando c’è solo la ricetta
+      outputsWrap.classList.add('single');
     }
 
     // ✅ Incrementa SOLO dopo risposta OK → contatore globale
@@ -242,7 +248,19 @@ if (favBtn){
     const cur = currentRecipeObj();
     const favs = loadFavsLS();
     const idx = favs.findIndex(f => isSameRecipe(f, cur));
-    if (idx >= 0) favs.splice(idx, 1); else favs.unshift(cur);
+    if (idx >= 0) {
+      // Rimuovi se già presente
+      favs.splice(idx, 1);
+      saveFavsLS(favs);
+      updateFavBtnState();
+      return;
+    }
+    // Aggiunta con limite massimo 5
+    if (favs.length >= 5) {
+      alert("Puoi salvare al massimo 5 ricette nei Preferiti su questo dispositivo. Rimuovine una prima di aggiungerne un'altra.");
+      return;
+    }
+    favs.unshift(cur);
     saveFavsLS(favs);
     updateFavBtnState();
   });
@@ -289,6 +307,69 @@ function fallbackSplitFantasia(text){
   const body = idx>0 ? lines.slice(1, idx).join('\n').trim() : lines.slice(1).join('\n').trim();
   const shopping = idx>0 ? '<ul>' + lines.slice(idx+1).filter(Boolean).map(li=>`<li>${li.replace(/^[-*]\s*/, '')}</li>`).join('') + '</ul>' : '';
   return { title, body, shopping };
+}
+
+// --- Utils di formattazione "Svuota frigo" ---
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// Converte il testo stile blog con titoletti/elenchi in HTML pulito
+function renderSvuotaHTML(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  // Rimuovi **bold** markdown
+  const stripMd = (s) => s.replace(/\*\*(.*?)\*\*/g, '$1').replace(/__([^_]+)__/g, '$1');
+
+  // Separiamo eventuali blocchi "Ingredienti" / "Procedimento | Passaggi"
+  let idxIng = lines.findIndex(l => /ingredienti/i.test(l));
+  let idxProc = lines.findIndex(l => /(procedimento|passaggi|preparazione)/i.test(l));
+
+  // Se il modello non mette titoli, proviamo a inferire: prima lista non numerata = ingredienti, poi numerata = procedimento
+  const hasTitles = idxIng !== -1 || idxProc !== -1;
+
+  let ingPart = [], procPart = [], head = [];
+  if (hasTitles) {
+    // Ordina gli indici
+    const firstIdx = [idxIng, idxProc].filter(i=>i!==-1).sort((a,b)=>a-b)[0];
+    head = lines.slice(0, firstIdx);
+    if (idxIng !== -1 && idxProc !== -1) {
+      ingPart = lines.slice(idxIng+1, idxProc);
+      procPart = lines.slice(idxProc+1);
+    } else if (idxIng !== -1) {
+      ingPart = lines.slice(idxIng+1);
+    } else {
+      procPart = lines.slice(idxProc+1);
+    }
+  } else {
+    // Heuristics
+    const bullets = lines.filter(l => /^[-*•]/.test(l));
+    const numbers = lines.filter(l => /^\d+[\).\:-]\s/.test(l));
+    if (bullets.length >= 2) ingPart = bullets;
+    if (numbers.length >= 2) procPart = numbers;
+    head = lines.filter(l => !ingPart.includes(l) && !procPart.includes(l));
+  }
+
+  const mkList = (arr, numbered=false) => {
+    if(!arr.length) return '';
+    const items = arr.map(li => {
+      let t = stripMd(li).replace(/^[-*•]\s*/, '').replace(/^\d+[\).\:-]\s*/, '');
+      return `<li>${escapeHtml(t)}</li>`;
+    }).join('');
+    return numbered ? `<ol>${items}</ol>` : `<ul>${items}</ul>`;
+  };
+
+  // Se la prima riga è un titolo, lascialo fuori (lo gestiamo già a parte come H2)
+  const headText = stripMd(head.join('\n')).trim();
+
+  // Costruisci HTML
+  let html = '';
+  if (headText) html += `<p>${escapeHtml(headText)}</p>`;
+  if (ingPart.length) html += `<h3>Ingredienti</h3>${mkList(ingPart, false)}`;
+  if (procPart.length) html += `<h3>Passaggi</h3>${mkList(procPart, true)}`;
+  if (!ingPart.length && !procPart.length) {
+    // Fallback: tutto come paragrafo pulito
+    html = `<p>${escapeHtml(stripMd(text))}</p>`;
+  }
+  return html;
 }
 
 // Inizializza modalità default

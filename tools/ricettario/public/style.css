@@ -97,3 +97,11 @@ footer { text-align: center; font-size: .75rem; color: #a47b63; margin: 2rem aut
 .variants-label { opacity:.7; margin-right:.25rem; }
 .variant { border:1px solid #e0b396; background:#fff; padding:.25rem .6rem; border-radius:999px; cursor:pointer; font-size:14px; }
 .variant.active { background:#e57f3a; color:#fff; border-color:#e57f3a; }
+
+/* Centra il singolo output (solo Svuota frigo) */
+.outputs-grid { justify-items: stretch; }
+.outputs-grid.single { justify-items: center; }
+.outputs-grid.single #recipe-output { max-width: 560px; width: 100%; }
+#recipe-text h3 { margin: .75rem 0 .4rem; color:#7b5542; }
+#recipe-text ul, #recipe-text ol { margin: .25rem 0 .75rem 1.25rem; }
+#recipe-text li { line-height: 1.5; }
