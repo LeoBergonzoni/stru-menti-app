@@ -53,6 +53,14 @@
         <option value="da portare in ufficio">Da portare in ufficio</option>
       </select>
 
+      <div class="variants">
+        <span class="variants-label">Varianti:</span>
+        <button type="button" class="variant active" data-v="">Nessuna</button>
+        <button type="button" class="variant" data-v="light">Light</button>
+        <button type="button" class="variant" data-v="vegetariana">Vegetariana</button>
+        <button type="button" class="variant" data-v="veloce">Più veloce</button>
+      </div>
+
       <button type="submit" id="generate-recipe">🍳 Prepara</button>
     </form>
 
@@ -63,6 +71,7 @@
         <div class="actions">
           <button id="new-recipe">🔁 Nuova ricetta</button>
           <button id="copy-recipe">📋 Copia</button>
+          <button id="fav-toggle" title="Aggiungi ai preferiti">☆ Salva</button>
         </div>
       </div>
 
@@ -115,5 +124,11 @@
   <footer>
     &copy; 2025 Ricettario da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI
   </footer>
+
+
+<p style="text-align:center;margin:1rem 0;">
+  <a href="preferiti.html">⭐ Vedi le mie ricette salvate</a>
+</p>
+
 </body>
 </html>

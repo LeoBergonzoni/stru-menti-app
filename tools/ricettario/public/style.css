@@ -92,3 +92,8 @@ footer { text-align: center; font-size: .75rem; color: #a47b63; margin: 2rem aut
 
 /* (facoltativo) assicura che il cookie banner non copra il modale */
 #limit-modal{ z-index:2000; }
+
+.variants { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.25rem; }
+.variants-label { opacity:.7; margin-right:.25rem; }
+.variant { border:1px solid #e0b396; background:#fff; padding:.25rem .6rem; border-radius:999px; cursor:pointer; font-size:14px; }
+.variant.active { background:#e57f3a; color:#fff; border-color:#e57f3a; }

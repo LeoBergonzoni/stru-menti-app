@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Le mie ricette preferite — Ricettario</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .fav-wrap{max-width:760px;margin:2rem auto;background:#fff3e6;padding:1.25rem;border-radius:1rem;box-shadow:0 0 10px rgba(0,0,0,.08)}
+    .fav-card{background:#fff;border:1px dashed #e57f3a;border-radius:1rem;padding:1rem;margin-bottom:1rem}
+    .fav-title{margin:0 0 .5rem;color:#e57f3a}
+    .fav-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+    .btn{border:none;border-radius:8px;padding:.45rem .7rem;cursor:pointer}
+    .btn-copy{background:#f0c28b}
+    .btn-del{background:#ffd0c0}
+    .empty{opacity:.7;text-align:center;padding:1rem}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <div class="fav-wrap">
+    <div class="topbar">
+      <h1 style="margin:0">⭐ Le mie ricette</h1>
+      <a href="./" style="text-decoration:none">↩︎ Torna al Ricettario</a>
+    </div>
+    <div id="fav-list"></div>
+  </div>
+
+  <script>
+    function loadFavs(){
+      try { return JSON.parse(localStorage.getItem('ricettario:favorites') || '[]'); }
+      catch { return []; }
+    }
+    function saveFavs(list){ localStorage.setItem('ricettario:favorites', JSON.stringify(list)); }
+
+    function render(){
+      const root = document.getElementById('fav-list');
+      const favs = loadFavs();
+      if(!favs.length){
+        root.innerHTML = '<p class="empty">Non hai ancora salvato nessuna ricetta. Torna al Ricettario e usa la stellina ⭐ per salvarle.</p>';
+        return;
+      }
+      root.innerHTML = '';
+      favs.forEach((f, idx) => {
+        const card = document.createElement('div');
+        card.className = 'fav-card';
+        card.innerHTML = `
+          <h3 class="fav-title">${escapeHtml(f.title || 'Ricetta')}</h3>
+          <div class="fav-body" style="white-space:pre-wrap">${escapeHtml(f.body || '')}</div>
+          ${f.shopping ? `<h4 style="margin:.75rem 0 .25rem">🧾 Ingredienti e dosi</h4>
+            <div class="fav-shopping" style="white-space:pre-wrap">${escapeHtml(f.shopping)}</div>` : ''}
+          <div class="fav-actions">
+            <button class="btn btn-copy" data-idx="${idx}">📋 Copia</button>
+            <button class="btn btn-del" data-idx="${idx}">🗑️ Elimina</button>
+          </div>
+        `;
+        root.appendChild(card);
+      });
+
+      // listeners
+      root.querySelectorAll('.btn-copy').forEach(b=>{
+        b.addEventListener('click', e=>{
+          const i = Number(e.currentTarget.dataset.idx);
+          const f = loadFavs()[i];
+          const text = `${f.title}\n\n${f.body}${f.shopping?`\n\nIngredienti e dosi:\n${f.shopping}`:''}`;
+          navigator.clipboard.writeText(text);
+          alert('Copiato negli appunti!');
+        });
+      });
+      root.querySelectorAll('.btn-del').forEach(b=>{
+        b.addEventListener('click', e=>{
+          const i = Number(e.currentTarget.dataset.idx);
+          const favs = loadFavs();
+          favs.splice(i,1);
+          saveFavs(favs);
+          render();
+        });
+      });
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    render();
+  </script>
+</body>
+</html>

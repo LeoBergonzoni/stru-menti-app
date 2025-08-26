@@ -1,4 +1,4 @@
-// Ricettario — script.js (doppia modalità + lista spesa) — contatore unico globale via usageHelper
+// Ricettario — script.js (doppia modalità + lista spesa + varianti + preferiti) — contatore unico globale via usageHelper
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
@@ -32,12 +32,15 @@ const shoppingText = document.getElementById("shopping-text");
 const newRecipeBtn = document.getElementById("new-recipe");
 const copyBtn = document.getElementById("copy-recipe");
 const copyShopBtn = document.getElementById("copy-shopping");
+const favBtn = document.getElementById("fav-toggle");
 
-// Tabs modalità
+// Tabs modalità + varianti
 const modeTabs = document.querySelectorAll('.mode-tab');
 const modeDesc = document.getElementById('mode-desc');
 let currentMode = 'svuota'; // 'svuota' | 'fantasia'
+let variant = ""; // "", "light", "vegetariana", "veloce"
 
+// ===== Modalità =====
 function setMode(mode){
   currentMode = mode;
   modeTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
@@ -57,7 +60,6 @@ function setMode(mode){
 modeTabs.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
 
 function ensureInputs(min){
-  // Mantiene almeno "min" input e imposta i required
   let inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
   while(inputs.length < min){
     addIngredientField();
@@ -70,7 +72,6 @@ function ensureInputs(min){
 }
 
 function trimInputsTo(n){
-  // Riduce il numero di input visibili a n (mantiene i valori dei primi n)
   let inputs = ingredientContainer.querySelectorAll("input[name='ingredient']");
   while (inputs.length > n) {
     ingredientContainer.removeChild(inputs[inputs.length - 1]);
@@ -91,19 +92,27 @@ addButton.addEventListener("click", () => {
   const currentInputs = ingredientContainer.querySelectorAll("input").length;
   if (currentInputs < 10) addIngredientField();
 });
-
 removeButton.addEventListener("click", () => {
   const inputs = ingredientContainer.querySelectorAll("input");
   const min = currentMode === 'svuota' ? 2 : 1;
   if (inputs.length > min) ingredientContainer.removeChild(inputs[inputs.length - 1]);
 });
 
-// Modale limite
+// ===== Varianti (UI) =====
+document.querySelectorAll('.variant').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.variant').forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    variant = btn.dataset.v || "";
+  });
+});
+
+// ===== Modale limite =====
 const modal = document.getElementById("limit-modal");
 const modalClose = document.getElementById("close-limit");
 modalClose.addEventListener("click", () => { modal.classList.remove("active"); modal.classList.add("hidden"); });
 
-// Contatore visibile in fondo (stile leggero)
+// ===== Contatore visibile in fondo =====
 const counterDiv = document.createElement("div");
 counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85rem; color:#888;";
 const footer = document.querySelector("footer");
@@ -117,7 +126,7 @@ function updateCounter(){
 
 onAuthStateChanged(auth, async (user) => { usage = await loadUsage(app, user); updateCounter(); });
 
-// Submit: controllo limiti + chiamata AI
+// ===== Submit: controllo limiti + chiamata AI =====
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -177,6 +186,9 @@ form.addEventListener("submit", async (e) => {
     usage.monthlyClicks = await incrementUsage(usage);
     updateCounter();
 
+    // ⭐ aggiorna stato stellina dopo ogni nuova ricetta
+    updateFavBtnState();
+
   } catch (err) {
     outputsWrap.classList.add("hidden");
     alert("Si è verificato un errore. Riprova tra poco.");
@@ -200,12 +212,48 @@ copyShopBtn.addEventListener("click", () => {
   if(text){ navigator.clipboard.writeText(text); alert("Lista spesa copiata! 📋"); }
 });
 
-// Funzione API con gestione errori HTTP
+// ===== Preferiti (LocalStorage) =====
+function loadFavsLS(){
+  try { return JSON.parse(localStorage.getItem('ricettario:favorites') || '[]'); }
+  catch { return []; }
+}
+function saveFavsLS(list){ localStorage.setItem('ricettario:favorites', JSON.stringify(list)); }
+
+function currentRecipeObj(){
+  return {
+    title: recipeTitleEl.textContent.replace(/^🍽️\s*/, ''),
+    body: recipeText.textContent,
+    shopping: (!shoppingOutput.classList.contains('hidden') ? (shoppingText.innerText.trim() || null) : null),
+    ts: Date.now()
+  };
+}
+function isSameRecipe(a, b){ return a.title===b.title && a.body===b.body; }
+
+function updateFavBtnState(){
+  if(!favBtn) return;
+  const cur = currentRecipeObj();
+  const favs = loadFavsLS();
+  const exists = favs.some(f => isSameRecipe(f, cur));
+  favBtn.textContent = exists ? '⭐ Salvata' : '☆ Salva';
+}
+
+if (favBtn){
+  favBtn.addEventListener('click', () => {
+    const cur = currentRecipeObj();
+    const favs = loadFavsLS();
+    const idx = favs.findIndex(f => isSameRecipe(f, cur));
+    if (idx >= 0) favs.splice(idx, 1); else favs.unshift(cur);
+    saveFavsLS(favs);
+    updateFavBtnState();
+  });
+}
+
+// ===== API =====
 async function fetchRecipe(ingredients, location, mode) {
   const res = await fetch("/.netlify/functions/ricettario-chatgpt", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ingredients, location, mode })
+    body: JSON.stringify({ ingredients, location, mode, variant })
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   const data = await res.json();
@@ -215,7 +263,6 @@ async function fetchRecipe(ingredients, location, mode) {
 
 // ===== Helpers parsing Fantasia =====
 function tryParseFantasiaJSON(text){
-  // Cerca un blocco JSON nel testo (anche se circondato da spiegazioni)
   const match = text.match(/\{[\s\S]*\}/);
   if(!match) return null;
   try{
@@ -225,7 +272,6 @@ function tryParseFantasiaJSON(text){
     return obj;
   }catch(e){ return null; }
 }
-
 function renderShoppingList(list){
   if(!list.length) return '<em>Nessun ingrediente fornito.</em>';
   return '<ul>' + list.map(it=>{
@@ -235,7 +281,6 @@ function renderShoppingList(list){
     return `<li>${item}${q?': '+q:''}</li>`;
   }).join('') + '</ul>';
 }
-
 function fallbackSplitFantasia(text){
   const lines = text.split('\n').map(l=>l.trim());
   const title = (lines[0]||'').replace(/^["#*\- ]+/, '').trim();
