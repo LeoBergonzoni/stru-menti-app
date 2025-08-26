@@ -19,32 +19,33 @@ exports.handler = async function (event) {
       "veloce": " Ottimizza per velocità: massimo 20 minuti e pochi passaggi, ingredienti facilmente reperibili."
     }[variant] || "";
 
+    // 🔸 "Svuota frigo": ora chiediamo JSON con shopping_list
     const promptSvuota =
       `Genera una ricetta semplice e veloce da preparare con ${ingList.join(", ")} da mangiare ${location}. ` +
-      `Scarta pure alcuni ingredienti che ti ho detto se non sono consoni ad una ricetta. ` +
-      `Dammi prima il titolo della ricetta in una singola riga, poi gli ingredienti necessari e infine i passaggi in maniera più semplice possibile. ` +
-      `Usa uno stile semplice, come una ricetta da blog.` +
-      variantClause;
+      `Scarta pure alcuni ingredienti che ti ho detto se non sono consoni ad una ricetta.` +
+      variantClause +
+      `\n\nRispondi in JSON valido con questa forma esatta: ` +
+      `{"title": string, "instructions": string, "shopping_list": Array<(string | {"item": string, "qty"?: number|string, "unit"?: string})>}. ` +
+      `Non aggiungere testo fuori dal JSON.`;
 
-    // In "Fantasia" chiediamo JSON strutturato
+    // 🔸 "Fantasia": stesso schema JSON
     const promptFantasia =
       `Sei uno chef creativo. Genera una ricetta più gustosa e appetitosa possibile in cui l’ingrediente o gli ingredienti principali sono ${ingList.join(", ")} da mangiare ${location}. ` +
       `Sentiti libero di aggiungere tutti gli ingredienti ulteriori come contorni, condimenti, spezie e salse che pensi possano servire a creare un’ottima ricetta quasi da ristorante stellato.` +
       variantClause +
-      `\n\nRispondi in JSON valido con questa forma esatta: {"title": string, "instructions": string, "shopping_list": Array<(string | {"item": string, "qty"?: number|string, "unit"?: string})>}. ` +
+      `\n\nRispondi in JSON valido con questa forma esatta: ` +
+      `{"title": string, "instructions": string, "shopping_list": Array<(string | {"item": string, "qty"?: number|string, "unit"?: string})>}. ` +
       `Non aggiungere testo fuori dal JSON.`;
 
     const prompt = mode === 'fantasia' ? promptFantasia : promptSvuota;
 
-    // Modello + risposta strutturata per "fantasia"
     const body = {
       model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
-      temperature: mode === 'fantasia' ? 0.6 : 0.5
+      temperature: mode === 'fantasia' ? 0.6 : 0.5,
+      // ✅ forziamo JSON per entrambe le modalità
+      response_format: { type: "json_object" }
     };
-    if (mode === 'fantasia') {
-      body.response_format = { type: "json_object" };
-    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
