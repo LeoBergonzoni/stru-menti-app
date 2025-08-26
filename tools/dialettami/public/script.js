@@ -1,4 +1,4 @@
-// Dialettami — script.js (versione con contatore globale via usageHelper)
+// Dialettami — script.js (contatore globale + login/signup anonimi + contatore sopra footer)
 
 // ===== Endpoint funzione Netlify (proxy verso AI) =====
 const API_PROXY_URL = '/.netlify/functions/dialettami';
@@ -35,12 +35,12 @@ const pillItToDia = el('mode-it-to-dialetto');
 const pillDiaToIt = el('mode-dialetto-to-it');
 const dictateBtn = el('dictate');
 
-// Badge (footer)
+// Badge (footer in HTML, ma lo spostiamo sopra il footer)
 const usageInfo   = el('usage-info');
 const planLabel   = el('plan-label');
 const clicksLabel = el('clicks-label');
 
-// Modali (supporto due tipi)
+// Modali (supporto due tipi — compatibilità con altri tool)
 const limitModalOverlay = el('limit-modal');      // Ricettario/BeKind
 const limitBackdrop     = el('limit-backdrop');   // Dialettami
 
@@ -60,6 +60,37 @@ function closeLimit() {
 }
 el('close-limit')?.addEventListener('click', closeLimit);
 limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) closeLimit(); });
+
+// ===== Sposta il contatore sopra il footer + crea link Accedi/Registrati =====
+(function placeCounterAboveFooter(){
+  if (!usageInfo) return;
+  // prende il contenitore .footer
+  const footer = document.querySelector('.footer');
+  // se per qualsiasi motivo non esiste, esci
+  if (!footer) return;
+  // rendilo visibile e spostalo PRIMA del footer
+  usageInfo.classList.remove('hidden');
+  footer.parentNode.insertBefore(usageInfo, footer);
+
+  // crea i link Accedi/Registrati, inizialmente nascosti
+  const authLinks = document.createElement('p');
+  authLinks.id = 'auth-links';
+  authLinks.style.cssText = 'text-align:center;margin:6px 0 0;font-size:.95rem;';
+  authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
+  usageInfo.after(authLinks);
+  authLinks.hidden = true;
+
+  // funzione per togglare la visibilità
+  window.__showAuthLinks = (isAnon) => { authLinks.hidden = !isAnon; };
+})();
+
+// (ritocchino stile link – opzionale ma carino)
+const style = document.createElement('style');
+style.textContent = `
+  #auth-links a { color: inherit; text-decoration: underline; }
+  #auth-links a:hover { opacity: .85; }
+`;
+document.head.appendChild(style);
 
 // ===== Modalità iniziale =====
 function setMode(mode){
@@ -114,7 +145,9 @@ function renderBadge() {
 
 onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
-  renderBadge(); showAuthLinks(!user) 
+  renderBadge();
+  // mostra i link Accedi/Registrati solo se NON loggato
+  if (window.__showAuthLinks) window.__showAuthLinks(!user);
 });
 
 // ===== Richiesta traduzione con controllo limiti =====
