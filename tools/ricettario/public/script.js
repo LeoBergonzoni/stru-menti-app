@@ -118,12 +118,23 @@ counterDiv.style.cssText = "text-align:center; margin-top:1rem; font-size:0.85re
 const footer = document.querySelector("footer");
 if (footer) document.body.insertBefore(counterDiv, footer); else document.body.appendChild(counterDiv);
 
+const authLinks = document.createElement('p');
+authLinks.id = 'auth-links';
+authLinks.style.cssText = "text-align:center; margin:.25rem 0 0; font-size:0.9rem;";
+authLinks.innerHTML = `<a href="login.html">Accedi</a> | <a href="signup.html">Registrati</a>`;
+counterDiv.after(authLinks);
+authLinks.hidden = true; // mostrali solo se anonimo
+
+function showAuthLinks(isAnon){
+  authLinks.hidden = !isAnon;
+}
+
 let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };
 function updateCounter(){
   const shownMax = (usage.maxClicks > 1e8) ? "∞" : usage.maxClicks;
   counterDiv.innerHTML = `👤 Utente: <strong>${usage.planLabel}</strong> — Utilizzi: <strong>${usage.monthlyClicks}/${shownMax}</strong>`;
 }
-onAuthStateChanged(auth, async (user) => { usage = await loadUsage(app, user); updateCounter(); });
+onAuthStateChanged(auth, async (user) => { usage = await loadUsage(app, user); updateCounter(); showAuthLinks(!user); });
 
 // ===== Submit =====
 form.addEventListener("submit", async (e) => {
