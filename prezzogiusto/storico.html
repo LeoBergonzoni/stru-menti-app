@@ -9,13 +9,15 @@
     body { background: linear-gradient(to bottom right, #1e3a8a, #0f172a); }
   </style>
 </head>
-<body class="text-white font-sans min-h-screen flex flex-col items-center p-6">
-  <h1 class="text-2xl font-bold mb-6">📜 Ultimi prodotti visionati</h1>
+<body class="text-white font-sans min-h-screen flex flex-col items-center p-4">
+  <h1 class="text-2xl font-bold mb-4 text-center">📜 Ultimi prodotti visionati</h1>
 
-  <div id="historyList" class="space-y-4 w-full max-w-xl"></div>
+  <!-- Lista prodotti -->
+  <div id="historyList" class="w-full max-w-md flex flex-col gap-3 overflow-y-auto" style="max-height:70vh;"></div>
 
-  <div class="mt-8">
-    <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">⬅️ Torna allo strumento</a>
+  <!-- Pulsante ritorno -->
+  <div class="mt-6">
+    <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md">⬅️ Torna allo strumento</a>
   </div>
 
   <script>
@@ -30,12 +32,12 @@
 
       history.forEach(item => {
         const div = document.createElement("div");
-        div.className = "p-4 rounded bg-white bg-opacity-10 shadow";
+        div.className = "p-3 rounded bg-white bg-opacity-10 shadow text-sm";
         div.innerHTML = `
-          <div class="font-semibold text-lg">${item.product} — ${item.price}€</div>
-          <div class="text-sm text-gray-300">📍 ${item.location}</div>
+          <div class="font-semibold text-base mb-1">${item.product} — ${item.price}€</div>
+          <div class="text-xs text-gray-300">📍 ${item.location}</div>
           <div class="mt-2">${item.result}</div>
-          <div class="mt-1 text-xl">${item.badge}</div>
+          <div class="mt-1 text-lg">${item.badge}</div>
         `;
         historyList.appendChild(div);
       });
