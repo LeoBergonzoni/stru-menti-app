@@ -20,9 +20,6 @@ Rispondi SOLO nel formato:
 Prezzo medio stimato: X€
 Valutazione: [sotto la media | nella media | sopra la media | molto sopra la media]
 
-Se non hai abbastanza dati, scrivi:
-Prezzo medio stimato: non disponibile
-Valutazione: non determinabile
 `;
 
     const response = await openai.chat.completions.create({
