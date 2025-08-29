@@ -1,5 +1,6 @@
+// checkPrice.js aggiornato
 const OpenAI = require("openai");
-console.log("API KEY:", process.env.OPENAI_API_KEY);
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -8,21 +9,32 @@ exports.handler = async function (event, context) {
   try {
     const { product, price, location } = JSON.parse(event.body);
 
-    const prompt = `Un utente sta acquistando "${product}" per ${price}€ a "${location}". Sulla base del prezzo medio di mercato, valuta se è un buon prezzo, nella media o troppo alto. Rispondi in modo sintetico con: prezzo medio stimato in €, e livello ("sotto la media", "nella media", "sopra la media", "molto sopra la media").`;
+    const prompt = `
+Analizza il prezzo di mercato di un prodotto e fornisci una valutazione standardizzata.
+Dati:
+- Prodotto: "${product}"
+- Prezzo: ${price}€
+- Luogo: ${location}
+
+Rispondi SOLO nel formato:
+Prezzo medio stimato: X€
+Valutazione: [sotto la media | nella media | sopra la media | molto sopra la media]
+
+Se non hai abbastanza dati, scrivi:
+Prezzo medio stimato: non disponibile
+Valutazione: non determinabile
+`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4.1",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 100,
+      temperature: 0.3, // meno variabilità
+      max_tokens: 120,
     });
-
-    console.log("Risposta OpenAI:", JSON.stringify(response, null, 2));
 
     const text = response.choices?.[0]?.message?.content?.trim();
 
     if (!text) {
-      console.error("Risposta vuota o non valida da OpenAI");
       return {
         statusCode: 500,
         body: JSON.stringify({ error: "Risposta vuota da OpenAI" }),

@@ -35,7 +35,7 @@ authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | 
 counterDiv.after(authLinks);
 authLinks.hidden = true; // mostrali solo se anonimo
 
-function showAuthLinks(isAnon){
+function showAuthLinks(isAnon) {
   authLinks.hidden = !isAnon;
 }
 
@@ -47,7 +47,8 @@ function updateCounter() {
 // Carica piano + contatore globale quando cambia l’auth
 onAuthStateChanged(auth, async (user) => {
   usage = await loadUsage(app, user);
-  updateCounter(); showAuthLinks(!user);
+  updateCounter();
+  showAuthLinks(!user);
 });
 
 // --- DOM logic ---
@@ -119,13 +120,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const text = data.result.toLowerCase();
       let colorClass = "bg-blue-600";
-      if (text.includes("molto sopra la media")) colorClass = "bg-red-600";
-      else if (text.includes("sopra la media")) colorClass = "bg-yellow-600";
-      else if (text.includes("molto sotto la media") || text.includes("sotto la media")) colorClass = "bg-green-600";
+      let badge = "ℹ️ Prezzo non determinato";
+
+      if (text.includes("molto sopra la media")) {
+        colorClass = "bg-red-600";
+        badge = "🔴 Troppo caro";
+      } else if (text.includes("sopra la media")) {
+        colorClass = "bg-yellow-600";
+        badge = "🟠 Un po’ caro";
+      } else if (text.includes("molto sotto la media")) {
+        colorClass = "bg-green-600";
+        badge = "🟢 Affare incredibile";
+      } else if (text.includes("sotto la media")) {
+        colorClass = "bg-green-600";
+        badge = "🟢 Ottimo affare";
+      } else if (text.includes("nella media")) {
+        colorClass = "bg-blue-600";
+        badge = "🟡 Prezzo giusto";
+      }
 
       resultDiv.className = `mt-6 p-4 rounded text-white font-bold text-center ${colorClass}`;
-      resultDiv.innerText = data.result;
+      resultDiv.innerHTML = `<div>${data.result}</div><div class="mt-2 text-lg">${badge}</div>`;
       resultDiv.classList.remove("hidden");
+
+      // ✅ Salvataggio in localStorage (ultimi 5)
+      let history = JSON.parse(localStorage.getItem("priceHistory")) || [];
+      history.unshift({ product, price, location, result: data.result, badge });
+      history = history.slice(0, 5);
+      localStorage.setItem("priceHistory", JSON.stringify(history));
 
       // ✅ Incremento SOLO dopo risposta OK → contatore globale
       usage.monthlyClicks = await incrementUsage(usage);
@@ -135,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
       resultDiv.className = "mt-6 p-4 rounded text-white font-bold text-center bg-red-600";
       resultDiv.innerText = "Errore nella richiesta: " + error.message;
       resultDiv.classList.remove("hidden");
-      // ❌ niente incremento
     } finally {
       submitBtn.disabled = prevDisabled;
     }
