@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Preferiti — Be Kind</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;max-width:800px;margin:0 auto;padding:16px;background:#f7f9fb;}
+    h1{color:#4a7c59;text-align:center}
+    .item{background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
+    .raw{color:#555;margin:0 0 6px}
+    .polite{white-space:pre-wrap;margin:0}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    button{cursor:pointer;border:1px solid #ccc;border-radius:8px;padding:6px 10px;background:#eee}
+    #empty{color:#777;text-align:center;margin-top:24px}
+    #topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <a href="./">← Torna a Be Kind</a>
+    <button id="clear">Svuota tutti</button>
+  </div>
+  <h1>⭐ Preferiti (max 5)</h1>
+  <div id="list"></div>
+  <p id="empty" style="display:none;">Nessun preferito salvato.</p>
+
+  <script>
+    const KEY = "bekind:favorites";
+    const listEl = document.getElementById("list");
+    const emptyEl = document.getElementById("empty");
+    const clearBtn = document.getElementById("clear");
+
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"[]"); }catch{return []} }
+    function save(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); }
+    function render(){
+      const items = load();
+      listEl.innerHTML = "";
+      emptyEl.style.display = items.length ? "none" : "block";
+      items.forEach(({id,raw,polite})=>{
+        const card = document.createElement("div");
+        card.className = "item";
+        card.innerHTML = `
+          <p class="raw"><strong>Testo di getto:</strong> ${escapeHtml(raw)}</p>
+          <p class="polite"><strong>Versione gentile:</strong><br>${escapeHtml(polite)}</p>
+          <div class="row">
+            <button data-copy="${id}" data-type="polite">Copia versione gentile</button>
+            <button data-copy="${id}" data-type="raw">Copia testo di getto</button>
+            <button data-del="${id}">Rimuovi</button>
+          </div>`;
+        listEl.appendChild(card);
+      });
+    }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+    listEl.addEventListener("click",(e)=>{
+      const btn = e.target.closest("button"); if(!btn) return;
+      const items = load();
+      if (btn.dataset.del){
+        const id = +btn.dataset.del;
+        save(items.filter(x=>x.id!==id)); render();
+      } else if (btn.dataset.copy){
+        const id = +btn.dataset.copy;
+        const it = items.find(x=>x.id===id);
+        if(!it) return;
+        const text = btn.dataset.type==="raw" ? it.raw : it.polite;
+        navigator.clipboard.writeText(text);
+        btn.textContent = "Copiato!";
+        setTimeout(()=>btn.textContent = (btn.dataset.type==="raw"?"Copia testo di getto":"Copia versione gentile"), 1200);
+      }
+    });
+
+    clearBtn.onclick = ()=>{ if(confirm("Sicuro di svuotare tutti i preferiti?")){ save([]); render(); } };
+    render();
+  </script>
+</body>
+</html>

@@ -9,18 +9,12 @@ exports.handler = async (event) => {
     });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini", // <-- da "gpt-3.5-turbo"
       messages: [
-        {
-          role: "system",
-          content: "Riformula le frasi in maniera gentile, professionale e corretta.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
+        { role: "system", content: "Riformula frasi in modo gentile, professionale, corretto e chiaro." },
+        { role: "user", content: prompt },
       ],
-      temperature: 0.7,
+      temperature: 0.5 // leggermente più bassa per toni costanti
     });
 
     console.log("Risposta da OpenAI:", JSON.stringify(completion, null, 2));
