@@ -7,19 +7,9 @@ const API_PROXY_URL = '/.netlify/functions/dialettami';
 import { loadUsage, incrementUsage, MONTH_KEY } from "/_assets/usageHelper.js";
 
 // ===== Firebase =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
-  authDomain: "stru-menti.firebaseapp.com",
-  projectId: "stru-menti",
-  storageBucket: "stru-menti.appspot.com",
-  messagingSenderId: "851395234512",
-  appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// ===== Firebase (shared) =====
+import { app, auth } from "/shared/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 // ===== UI helpers =====
 const el = (id) => document.getElementById(id);
