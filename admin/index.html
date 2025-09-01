@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stru🧠Menti — Admin</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+  <style>
+    :root {
+      --bg:#0b0f13; --card:#0f141a; --line:#202833; --fg:#e6e9ef;
+    }
+    html,body{margin:0;height:100%}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:12px 16px;z-index:10}
+    h1{font-size:18px;margin:0}
+    .wrap{max-width:1100px;margin:18px auto;padding:0 16px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+    input,button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+    button{cursor:pointer}
+    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px}
+    th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;font-size:14px}
+    th{position:sticky;top:58px;background:var(--bg);z-index:5}
+    tr:hover td{background:var(--card)}
+    .muted{opacity:.8}
+    .pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+    .ok{color:#7ee787;border-color:#2d4f39;background:#0d1a12}
+    .bad{color:#ff7b72;border-color:#52313b;background:#1a0f12}
+    .tot{font-weight:600}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ Admin — Clienti & Click</h1>
+  </header>
+
+  <div class="wrap">
+    <div class="bar">
+      <label>Mese (YYYY-MM): <input id="month" placeholder="2025-09"/></label>
+      <label>Filtro nome/email: <input id="search" placeholder="cerca…"/></label>
+      <button id="exportCsv">Esporta CSV</button>
+      <span id="status" class="muted"></span>
+      <span id="who" class="pill"></span>
+      <button id="logoutBtn" style="margin-left:auto">Logout</button>
+    </div>
+
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>UID</th>
+          <th>Piano</th>
+          <th class="tot">Click mese</th>
+          <th>Click totali (lifetime)</th>
+          <th>Mese</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="tot">Totale mese</td>
+          <td id="tMonth" class="tot"></td>
+          <td id="tLife"></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- JS -->
+  <script type="module" src="/admin/admin.js"></script>
+</body>
+</html>

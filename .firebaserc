@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "staging": "stru-menti-staging",
-    "prod": "stru-menti"
-  },
-  "targets": {},
-  "etags": {}
-}

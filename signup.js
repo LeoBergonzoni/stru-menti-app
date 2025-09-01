@@ -8,26 +8,21 @@ import {
   sendEmailVerification,
   signOut,
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { ensureUserDoc } from "/shared/ensureUserDoc.js";
 
 const signupForm = document.getElementById("signup-form");
 const googleSignupBtn = document.getElementById("google-signup");
 
 const provider = new GoogleAuthProvider();
 
-function goHome() {
-  window.location.replace("index.html");
-}
-
+function goHome() { window.location.replace("index.html"); }
 function setLoading(isLoading) {
   const btns = signupForm.querySelectorAll("button");
   btns.forEach((b) => (b.disabled = isLoading));
 }
 
 // Se già autenticato, vai in home
-onAuthStateChanged(auth, (u) => {
-  if (u) goHome();
-});
+onAuthStateChanged(auth, (u) => { if (u) goHome(); });
 
 // Registrazione email/password (→ richiede verifica email)
 signupForm.addEventListener("submit", async (e) => {
@@ -48,32 +43,14 @@ signupForm.addEventListener("submit", async (e) => {
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-    // Crea/merge un doc utente base (verrà comunque creato anche dal trigger onCreate lato server)
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        firstName,
-        lastName,
-        email,
-        plan: "free-logged",
-        createdAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    // crea/aggiorna doc utente con i dati del form
+    await ensureUserDoc(auth, db, { firstName, lastName });
 
-    // Invia email di verifica (Firebase Auth spedisce il messaggio con il tuo template)
-    await sendEmailVerification(user, {
-      url: `${location.origin}/login.html`, // dopo la verifica li riporti al login
-      handleCodeInApp: false,
-    });
-
-    // Logout immediato: l’utente potrà accedere solo dopo aver cliccato il link
+    // Invia email di verifica e disconnetti
+    await sendEmailVerification(user, { url: `${location.origin}/login.html`, handleCodeInApp: false });
     await signOut(auth);
 
-    alert(
-      "Ti abbiamo inviato un'email per verificare l'indirizzo. Apri il link di verifica e poi accedi con le tue credenziali."
-    );
-    // Resta su questa pagina o porta al login
+    alert("Ti abbiamo inviato un'email per verificare l'indirizzo. Apri il link e poi accedi.");
     window.location.href = "login.html";
   } catch (error) {
     console.error("Errore durante la registrazione:", error);
@@ -89,20 +66,8 @@ googleSignupBtn.addEventListener("click", async () => {
   try {
     const { user } = await signInWithPopup(auth, provider);
 
-    const fullName = user.displayName || "";
-    const [firstName = "", lastName = ""] = fullName.split(" ");
-
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        firstName,
-        lastName,
-        email: user.email,
-        plan: "free-logged",
-        createdAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    // puoi anche passare i nomi ricavati da displayName, ma non è necessario
+    await ensureUserDoc(auth, db);
 
     goHome();
   } catch (error) {

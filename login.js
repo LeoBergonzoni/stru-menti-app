@@ -7,7 +7,7 @@ import {
   sendEmailVerification,
   signOut,
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { ensureUserDoc } from "/shared/ensureUserDoc.js";
 
 const loginForm = document.getElementById("login-form");
 const googleLoginBtn = document.getElementById("google-login");
@@ -37,14 +37,8 @@ loginForm.addEventListener("submit", async (e) => {
       return;
     }
 
-    // crea/aggiorna doc utente
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, { email: user.email, createdAt: new Date().toISOString(), plan: "free-logged" });
-    } else if (!snap.data()?.plan) {
-      await setDoc(ref, { plan: "free-logged" }, { merge: true });
-    }
+    // garantisce/aggiorna il doc utente
+    await ensureUserDoc(auth, db);
 
     localStorage.setItem("username", user.email);
     goHome();
@@ -62,18 +56,8 @@ googleLoginBtn.addEventListener("click", async () => {
   try {
     const { user } = await signInWithPopup(auth, provider);
 
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        email: user.email,
-        name: user.displayName,
-        createdAt: new Date().toISOString(),
-        plan: "free-logged"
-      });
-    } else if (!snap.data()?.plan) {
-      await setDoc(ref, { plan: "free-logged" }, { merge: true });
-    }
+    // garantisce/aggiorna il doc utente
+    await ensureUserDoc(auth, db);
 
     localStorage.setItem("username", user.displayName || user.email);
     goHome();
