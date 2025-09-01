@@ -124,6 +124,8 @@ onAuthStateChanged(auth, async (user) => {
       show(premiumStatus);
       planInfo.style.display = "";
       planInfo.textContent = "👤 Accesso effettuato";
+      console.error(error.code, error.message);
+alert(`Errore: ${error.code} — ${error.message}`);
     }
   }
 });
