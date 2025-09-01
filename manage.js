@@ -22,7 +22,7 @@ const deleteBtn      = document.getElementById("delete-account");
 const downgradeBtn   = document.getElementById("downgrade-free"); // non usato con Stripe
 
 // --- Costanti ---
-const GENERIC_PORTAL_URL = "https://billing.stripe.com/p/login/test_8x29ANaOVdBF6Y0gFzb7y00";
+const GENERIC_PORTAL_URL = "https://billing.stripe.com/p/login/3cIcMZ2dkdOb3pU4Cx5sA00";
 
 // Helpers UI
 function show(el){ if(el) el.style.display = ""; }
