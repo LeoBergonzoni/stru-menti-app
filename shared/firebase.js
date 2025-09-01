@@ -18,16 +18,49 @@ const stagingConfig = {
   apiKey: "AIzaSyDsKioDHP2Be_sM5x261ak_LrxFZqNn5is",
   authDomain: "stru-menti-staging.firebaseapp.com",
   projectId: "stru-menti-staging",
-  storageBucket: "stru-menti-staging.firebasestorage.app",
+  storageBucket: "stru-menti-staging.firebasestorage.app", // ok come da tua console
   messagingSenderId: "472772497669",
   appId: "1:472772497669:web:e90b6abde26f32e694a76c"
 };
 
-// Riconosce se sei su staging
-const isStaging =
-  location.hostname.startsWith("staging.") ||
-  (location.hostname.includes("netlify.app") && location.hostname.includes("staging"));
+// === Rilevamento ambiente STAGING/PROD ===
+const host = location.hostname;
 
+// override manuale: ?env=staging|prod
+const qenv = new URLSearchParams(location.search).get("env");
+if (qenv) localStorage.setItem("FORCE_ENV", qenv);
+const forced = (localStorage.getItem("FORCE_ENV") || "").toLowerCase();
+
+const WHITELIST_STAGING = new Set([
+  "stru-menti-staging.netlify.app",
+  "staging.stru-menti.com",
+]);
+
+const WHITELIST_PROD = new Set([
+  "stru-menti.com",
+  "www.stru-menti.com",
+]);
+
+const isNetlifyBranchLike =
+  host.endsWith(".netlify.app") && (host.includes("--") || host.startsWith("deploy-preview-"));
+
+const isStagingAuto =
+  WHITELIST_STAGING.has(host) ||
+  (!WHITELIST_PROD.has(host) && isNetlifyBranchLike);
+
+const isStaging =
+  forced === "staging" ? true :
+  forced === "prod"    ? false :
+  isStagingAuto;
+
+// Log diagnostici
+console.log("[ENV] host:", host);
+console.log("[ENV] forced:", forced || "(none)");
+console.log("[ENV] auto:", isStagingAuto ? "STAGING" : "PROD");
+console.log("[ENV] final:", isStaging ? "STAGING" : "PROD");
+console.log("[ENV] project:", (isStaging ? stagingConfig : prodConfig).projectId);
+
+// Init
 const app = initializeApp(isStaging ? stagingConfig : prodConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
