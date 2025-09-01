@@ -33,7 +33,7 @@ function ensureFreeCTA() {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  // reset base
+  // reset base UI
   if (premiumStatus) premiumStatus.style.display = "none";
   if (planInfo) { planInfo.textContent = ""; planInfo.style.display = ""; }
   document.getElementById("free-cta")?.remove();
@@ -48,47 +48,62 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // === Loggato ===
-  // 1) Assicura che esista SEMPRE users/{uid} con plan: "free"
+  // === Loggato (mostra azioni base comuni) ===
+  hide(plansSection);
+  hide(footerAuthLinks);
+  show(footerLogoutBtn);
+  if (manageBtn) manageBtn.style.display = "inline-block";
+
+  // Saluto base
+  if (userInfoDiv) {
+    userInfoDiv.textContent = `👋 Ciao, ${user.displayName || user.email}!`;
+    userInfoDiv.style.display = "block";
+  }
+
+  // ⛔ Se l'email NON è verificata, non toccare Firestore.
+  if (!user.emailVerified) {
+    if (premiumStatus && planInfo) {
+      show(premiumStatus);
+      planInfo.style.display = "";
+      planInfo.textContent = "👤 Accesso effettuato (verifica la tua email per sbloccare tutte le funzioni).";
+    }
+    return;
+  }
+
+  // === Utente verificato: ora possiamo leggere/scrivere su Firestore ===
+
+  // 1) Assicura che esista SEMPRE users/{uid} (prima creazione con plan/clicks)
   try {
     const uref = doc(db, "users", user.uid);
     const usnap = await getDoc(uref);
     if (!usnap.exists()) {
       await setDoc(uref, {
-        plan: "free",
+        plan: "free",                // consentito solo in CREATE dalle rules
         billing: null,
-        clicksPerTool: 40,
+        clicksPerTool: 40,           // consentito solo in CREATE dalle rules
         createdAt: new Date(),
         email: user.email || null,
         firstName: (user.displayName?.split(" ")[0]) || null
       }, { merge: true });
-      // opzionale: console.log("Creato doc utente Firestore per", user.uid);
     }
   } catch (e) {
-    console.warn("Impossibile creare il doc utente:", e?.message || e);
+    console.warn("Impossibile creare il doc utente:", e?.code || "", e?.message || e);
   }
 
-  // 2) Saluto con nome
+  // 2) Aggiorna saluto con firstName se presente
   if (userInfoDiv) {
-    let name = user.displayName || user.email;
     try {
       const uref = doc(db, "users", user.uid);
       const usnap = await getDoc(uref);
       if (usnap.exists()) {
         const d = usnap.data();
-        name = d.firstName || user.email || name;
+        const name = d.firstName || user.displayName || user.email;
+        userInfoDiv.textContent = `👋 Ciao, ${name}!`;
       }
     } catch (e) {
-      console.warn("Nome utente non recuperato:", e?.message || e);
+      console.warn("Nome utente non recuperato:", e?.code || "", e?.message || e);
     }
-    userInfoDiv.textContent = `👋 Ciao, ${name}!`;
-    userInfoDiv.style.display = "block";
   }
-
-  hide(plansSection);
-  hide(footerAuthLinks);
-  show(footerLogoutBtn);
-  if (manageBtn) manageBtn.style.display = "inline-block";
 
   // 3) Piano attivo per badge/CTA
   try {
@@ -119,13 +134,11 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
   } catch (e) {
-    console.error("Errore lettura piano utente:", e?.message || e);
+    console.error("Errore lettura piano utente:", e?.code || "", e?.message || e);
     if (premiumStatus && planInfo) {
       show(premiumStatus);
       planInfo.style.display = "";
       planInfo.textContent = "👤 Accesso effettuato";
-      console.error(error.code, error.message);
-alert(`Errore: ${error.code} — ${error.message}`);
     }
   }
 });
