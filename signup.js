@@ -1,4 +1,5 @@
-import { auth } from "/shared/firebase.js";
+// signup.js
+import { auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
@@ -16,14 +17,14 @@ const provider = new GoogleAuthProvider();
 
 function goHome() { window.location.replace("index.html"); }
 function setLoading(isLoading) {
-  signupForm.querySelectorAll("button").forEach(b => b.disabled = isLoading);
+  signupForm?.querySelectorAll("button").forEach(b => b.disabled = isLoading);
 }
 
 // Se già autenticato, vai in home
 onAuthStateChanged(auth, (u) => { if (u) goHome(); });
 
-// Registrazione email/password
-signupForm.addEventListener("submit", async (e) => {
+// Registrazione email/password (nessuna scrittura su Firestore qui)
+signupForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = signupForm.email.value.trim();
   const password = signupForm.password.value;
@@ -38,32 +39,30 @@ signupForm.addEventListener("submit", async (e) => {
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-    // Invia email di verifica
+    // Invia email di verifica e fai logout
     await sendEmailVerification(user, { url: `${location.origin}/login.html` });
-
-    // Logout immediato: accesso solo dopo verifica
     await signOut(auth);
 
     alert("Ti abbiamo inviato un'email per verificare l'indirizzo. Dopo la verifica potrai accedere.");
     window.location.href = "login.html";
   } catch (err) {
-    console.error("Errore registrazione:", err);
-    alert("Errore: " + (err?.message || "impossibile registrarsi"));
+    console.error("Errore registrazione:", err?.code, err?.message, err);
+    alert(`Errore: ${err?.code || ''} — ${err?.message || 'impossibile registrarsi'}`);
   } finally {
     setLoading(false);
   }
 });
 
-// Registrazione / accesso con Google (nessuna verifica aggiuntiva)
-googleSignupBtn.addEventListener("click", async () => {
+// Registrazione / accesso con Google (qui posso creare/aggiornare subito il doc)
+googleSignupBtn?.addEventListener("click", async () => {
   setLoading(true);
   try {
     const { user } = await signInWithPopup(auth, provider);
     await ensureUserDoc(auth, db);
     goHome();
   } catch (err) {
-    console.error("Errore con Google:", err);
-    alert("Errore: " + (err?.message || "impossibile registrarsi con Google"));
+    console.error("Errore con Google:", err?.code, err?.message, err);
+    alert(`Errore: ${err?.code || ''} — ${err?.message || 'impossibile registrarsi con Google'}`);
   } finally {
     setLoading(false);
   }
