@@ -66,7 +66,8 @@ limitBackdrop?.addEventListener('click', (e)=>{ if(e.target === limitBackdrop) c
   const authLinks = document.createElement('p');
   authLinks.id = 'auth-links';
   authLinks.style.cssText = 'text-align:center;margin:6px 0 0;font-size:.95rem;';
-  authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
+  const base = location.origin;
+  authLinks.innerHTML = `<a href="${base}/login.html">Accedi</a> | <a href="${base}/signup.html">Registrati</a>`;
   usageInfo.after(authLinks);
   authLinks.hidden = true;
 

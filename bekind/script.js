@@ -1,15 +1,8 @@
 // BeKind — script.js (contatore unico globale via usageHelper + Preferiti in localStorage)
 
-// ===== Firebase + Auth
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-
-// ===== Helper contatore condiviso
-import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
-
-// ===== Config Firebase (uguale agli altri tool)
 import { app, auth } from "/shared/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
 
 // ===== Stato usage condiviso
 let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };
@@ -68,7 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
   authLinks = document.createElement('p');
   authLinks.id = 'auth-links';
   authLinks.style.cssText = "text-align:center; margin:.25rem 0 0; font-size:0.9rem;";
-  authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
+  const base = location.origin;
+  authLinks.innerHTML = `<a href="${base}/login.html">Accedi</a> | <a href="${base}/signup.html">Registrati</a>`;
   counterDiv.after(authLinks);
   authLinks.hidden = true;
 
