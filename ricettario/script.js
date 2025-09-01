@@ -1,12 +1,8 @@
 // Ricettario — script.js (doppia modalità + lista spesa + varianti + preferiti) — contatore unico globale via usageHelper
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
-
-// ===== Firebase (shared) =====
 import { app, auth } from "/shared/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
 
 // UI Elements
 const form = document.getElementById("ingredients-form");
@@ -112,7 +108,8 @@ if (footer) document.body.insertBefore(counterDiv, footer); else document.body.a
 const authLinks = document.createElement('p');
 authLinks.id = 'auth-links';
 authLinks.style.cssText = "text-align:center; margin:.25rem 0 0; font-size:0.9rem;";
-authLinks.innerHTML = `<a href="https://stru-menti.com/login.html">Accedi</a> | <a href="https://stru-menti.com/signup.html">Registrati</a>`;
+const base = location.origin;
+authLinks.innerHTML = `<a href="${base}/login.html">Accedi</a> | <a href="${base}/signup.html">Registrati</a>`;
 counterDiv.after(authLinks);
 authLinks.hidden = true; // mostrali solo se anonimo
 
