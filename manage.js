@@ -1,4 +1,4 @@
-import { auth } from "/shared/firebase.js";
+import { auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
   deleteUser,
