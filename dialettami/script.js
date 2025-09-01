@@ -9,7 +9,7 @@ import { loadUsage, incrementUsage, MONTH_KEY } from "/_assets/usageHelper.js";
 // ===== Firebase =====
 // ===== Firebase (shared) =====
 import { app, auth } from "/shared/firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 // ===== UI helpers =====
 const el = (id) => document.getElementById(id);

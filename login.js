@@ -6,7 +6,7 @@ import {
   GoogleAuthProvider,
   sendEmailVerification,
   signOut,
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { ensureUserDoc } from "/shared/ensureUserDoc.js";
 
 const loginForm = document.getElementById("login-form");

@@ -1,7 +1,7 @@
 // BeKind — script.js (contatore unico globale via usageHelper + Preferiti in localStorage)
 
 import { app, auth } from "/shared/firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
 
 // ===== Stato usage condiviso

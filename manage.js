@@ -2,14 +2,14 @@ import { auth } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
   deleteUser,
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   doc,
   getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // --- DOM ---
 const guardNoLogin   = document.getElementById("guard-nologin");

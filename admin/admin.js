@@ -2,10 +2,10 @@
 import { auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged, signOut, getIdTokenResult
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   collection, getDocs, doc, getDoc
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // UI refs
 const $ = (s)=>document.querySelector(s);
