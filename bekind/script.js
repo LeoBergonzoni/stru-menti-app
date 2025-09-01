@@ -8,16 +8,8 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { loadUsage, incrementUsage } from "/_assets/usageHelper.js";
 
 // ===== Config Firebase (uguale agli altri tool)
-const firebaseConfig = {
-  apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
-  authDomain: "stru-menti.firebaseapp.com",
-  projectId: "stru-menti",
-  storageBucket: "stru-menti.appspot.com",
-  messagingSenderId: "851395234512",
-  appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+import { app, auth } from "/shared/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 // ===== Stato usage condiviso
 let usage = { user: null, planLabel: "Anonimo", monthlyClicks: 0, maxClicks: 5 };

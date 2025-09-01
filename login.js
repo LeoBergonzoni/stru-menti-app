@@ -1,35 +1,18 @@
-// login.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { auth, db } from "/shared/firebase.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
-  authDomain: "stru-menti.firebaseapp.com",
-  projectId: "stru-menti",
-  storageBucket: "stru-menti.appspot.com",
-  messagingSenderId: "851395234512",
-  appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
+// 👇 aggiungi queste due righe (se non ci sono già nel file)
 const loginForm = document.getElementById("login-form");
 const googleLoginBtn = document.getElementById("google-login");
+
+// Provider Google
+const provider = new GoogleAuthProvider();
 
 function goHome() {
   // Redirect diretto senza tenere la pagina di login nello history

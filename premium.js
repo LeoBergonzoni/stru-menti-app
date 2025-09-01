@@ -23,21 +23,7 @@ function showAnnual() {
 monthlyTab.addEventListener('click', showMonthly);
 annualTab.addEventListener('click', showAnnual);
 
-// --- Firebase Auth (per verificare login e passare uid/email) ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-
-// Usa la stessa config della home
-const firebaseConfig = {
-  apiKey: "AIzaSyCRLUzNFa7GPLKzLYD440lNLONeUZGe-gI",
-  authDomain: "stru-menti.firebaseapp.com",
-  projectId: "stru-menti",
-  storageBucket: "stru-menti.appspot.com",
-  messagingSenderId: "851395234512",
-  appId: "1:851395234512:web:9b2d36080c23ba4a2cecd5"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+import { auth } from "/shared/firebase.js";
 
 // --- Utils ---
 async function postJSON(url, data, headers = {}) {
