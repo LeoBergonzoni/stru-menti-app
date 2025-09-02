@@ -17,8 +17,9 @@ const provider = new GoogleAuthProvider();
 function goHome() { window.location.replace("index.html"); }
 function setLoading(b){ signupForm?.querySelectorAll("button").forEach(x => x.disabled = b); }
 
-// In STAGING abilita il test della verifica email aggiungendo ?testVerify=1 all'URL
-const wantsVerifyTestInStaging = isStaging && new URLSearchParams(location.search).get("testVerify") === "1";
+// In STAGING inviamo la verifica solo se c'è ?testVerify=1 nell'URL
+const wantsVerifyTestInStaging = new URLSearchParams(location.search).get("testVerify") === "1";
+const allowVerifyInThisEnv = !isStaging || wantsVerifyTestInStaging;
 
 // Crea/merge doc utente base
 async function ensureUserDocBase(user, extra = {}) {
@@ -40,9 +41,10 @@ async function sendVerificationWithFallback(user) {
   // 1) Prova standard SDK
   try {
     await sendEmailVerification(user, { url: `${location.origin}/login.html` });
+    console.log("[verify] SDK OK");
     return true;
-  } catch (_) {
-    // continua col fallback
+  } catch (e) {
+    console.warn("[verify] SDK failed, try REST fallback:", e?.code, e?.message);
   }
 
   // 2) Fallback REST
@@ -55,12 +57,14 @@ async function sendVerificationWithFallback(user) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken }),
+        keepalive: true, // aiuta se l’utente chiude/lascia la pagina
       }
     );
     if (!res.ok) throw new Error(await res.text());
+    console.log("[verify] REST fallback OK");
     return true;
   } catch (e) {
-    console.error("[OOB fallback] invio verifica fallito:", e);
+    console.error("[verify] REST fallback failed:", e);
     return false;
   }
 }
@@ -87,15 +91,14 @@ signupForm?.addEventListener("submit", async (e) => {
     // Crea il doc base (anche se poi eseguiamo signOut)
     await ensureUserDocBase(user, { firstName, lastName });
 
-    // ── STAGING ────────────────────────────────────────────────
-    if (isStaging && !wantsVerifyTestInStaging) {
-      // Flusso "soft": niente verifica email, non blocchiamo l'utente
-      alert("Registrazione completata (staging: verifica email disattivata).");
+    // ── STAGING senza testVerify ──> nessuna email di verifica
+    if (!allowVerifyInThisEnv) {
+      alert("Registrazione completata (staging: nessuna email di verifica inviata).");
       goHome();
       return;
     }
 
-    // ── PROD o STAGING con testVerify=1 ───────────────────────
+    // ── PROD o STAGING con testVerify=1 ──> invia verifica (SDK + fallback)
     const ok = await sendVerificationWithFallback(user);
 
     // Piccolo respiro per evitare abort della fetch durante il signOut
