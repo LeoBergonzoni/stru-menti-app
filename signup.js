@@ -17,7 +17,10 @@ const provider = new GoogleAuthProvider();
 function goHome() { window.location.replace("index.html"); }
 function setLoading(b){ signupForm?.querySelectorAll("button").forEach(x => x.disabled = b); }
 
-// piccolo helper
+// In STAGING abilita il test della verifica email aggiungendo ?testVerify=1 all'URL
+const wantsVerifyTestInStaging = isStaging && new URLSearchParams(location.search).get("testVerify") === "1";
+
+// Crea/merge doc utente base
 async function ensureUserDocBase(user, extra = {}) {
   await setDoc(
     doc(db, "users", user.uid),
@@ -32,40 +35,37 @@ async function ensureUserDocBase(user, extra = {}) {
   );
 }
 
-// fallback: invia la verifica via REST se l’SDK fallisce/si annulla
+// Fallback invio verifica: SDK -> REST
 async function sendVerificationWithFallback(user) {
-  // 1) prova standard SDK
+  // 1) Prova standard SDK
   try {
     await sendEmailVerification(user, { url: `${location.origin}/login.html` });
     return true;
-  } catch (e) {
-    // continua con il fallback
+  } catch (_) {
+    // continua col fallback
   }
 
-  // 2) fallback diretto REST
+  // 2) Fallback REST
   try {
     const idToken = await user.getIdToken();
-    const apiKey  = app.options.apiKey; // dalla config già inizializzata
+    const apiKey  = app.options.apiKey;
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requestType: "VERIFY_EMAIL",
-          idToken
-        }),
+        body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken }),
       }
     );
     if (!res.ok) throw new Error(await res.text());
     return true;
   } catch (e) {
-    console.error("[OOB fallback] inviO mail fallito:", e);
+    console.error("[OOB fallback] invio verifica fallito:", e);
     return false;
   }
 }
 
-// già loggato? torna in home
+// Se già autenticato, vai in home
 onAuthStateChanged(auth, (u) => { if (u) goHome(); });
 
 // Email + password
@@ -84,20 +84,21 @@ signupForm?.addEventListener("submit", async (e) => {
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
 
-    // crea il doc base (utile anche se poi fai signOut)
+    // Crea il doc base (anche se poi eseguiamo signOut)
     await ensureUserDocBase(user, { firstName, lastName });
 
-    if (isStaging) {
-      // 👉 in STAGING non inviamo la mail di verifica
-      alert("Registrazione completata (staging, nessuna verifica email).");
+    // ── STAGING ────────────────────────────────────────────────
+    if (isStaging && !wantsVerifyTestInStaging) {
+      // Flusso "soft": niente verifica email, non blocchiamo l'utente
+      alert("Registrazione completata (staging: verifica email disattivata).");
       goHome();
       return;
     }
 
-    // 👉 in PROD inviamo la mail (con fallback)
+    // ── PROD o STAGING con testVerify=1 ───────────────────────
     const ok = await sendVerificationWithFallback(user);
 
-    // piccolo respiro per evitare abort del fetch durante il cleanup
+    // Piccolo respiro per evitare abort della fetch durante il signOut
     await new Promise(r => setTimeout(r, 150));
 
     await signOut(auth);
