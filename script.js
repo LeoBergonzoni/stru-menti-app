@@ -1,6 +1,6 @@
 import { auth, db } from "/shared/firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // Elementi DOM
 const userInfoDiv     = document.getElementById("user-info");
@@ -33,7 +33,7 @@ function ensureFreeCTA() {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  // reset base
+  // reset base UI
   if (premiumStatus) premiumStatus.style.display = "none";
   if (planInfo) { planInfo.textContent = ""; planInfo.style.display = ""; }
   document.getElementById("free-cta")?.remove();
@@ -48,61 +48,64 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // === Loggato ===
-  // 1) Assicura che esista SEMPRE users/{uid} con plan: "free"
-  try {
-    const uref = doc(db, "users", user.uid);
-    const usnap = await getDoc(uref);
-    if (!usnap.exists()) {
-      await setDoc(uref, {
-        plan: "free",
-        billing: null,
-        clicksPerTool: 40,
-        createdAt: new Date(),
-        email: user.email || null,
-        firstName: (user.displayName?.split(" ")[0]) || null
-      }, { merge: true });
-      // opzionale: console.log("Creato doc utente Firestore per", user.uid);
-    }
-  } catch (e) {
-    console.warn("Impossibile creare il doc utente:", e?.message || e);
-  }
-
-  // 2) Saluto con nome
-  if (userInfoDiv) {
-    let name = user.displayName || user.email;
-    try {
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-      if (usnap.exists()) {
-        const d = usnap.data();
-        name = d.firstName || user.email || name;
-      }
-    } catch (e) {
-      console.warn("Nome utente non recuperato:", e?.message || e);
-    }
-    userInfoDiv.textContent = `👋 Ciao, ${name}!`;
-    userInfoDiv.style.display = "block";
-  }
-
+  // === Loggato (mostra azioni base comuni) ===
   hide(plansSection);
   hide(footerAuthLinks);
   show(footerLogoutBtn);
   if (manageBtn) manageBtn.style.display = "inline-block";
 
-  // 3) Piano attivo per badge/CTA
+  // Saluto base
+  if (userInfoDiv) {
+    userInfoDiv.textContent = `👋 Ciao, ${user.displayName || user.email}!`;
+    userInfoDiv.style.display = "block";
+  }
+
+  // === Assicura che esista SEMPRE users/{uid} (prima creazione con plan/clicks)
+  try {
+    const uref = doc(db, "users", user.uid);
+    const usnap = await getDoc(uref);
+    if (!usnap.exists()) {
+      await setDoc(uref, {
+        plan: "free-logged",         // iniziale
+        billing: null,
+        clicksPerTool: 40,           // iniziale
+        createdAt: new Date(),
+        email: user.email || null,
+        firstName: (user.displayName?.split(" ")[0]) || null
+      }, { merge: true });
+    }
+  } catch (e) {
+    console.warn("Impossibile creare il doc utente:", e?.code || "", e?.message || e);
+  }
+
+  // Aggiorna saluto con firstName se presente
+  if (userInfoDiv) {
+    try {
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      if (usnap.exists()) {
+        const d = usnap.data();
+        const name = d.firstName || user.displayName || user.email;
+        userInfoDiv.textContent = `👋 Ciao, ${name}!`;
+      }
+    } catch (e) {
+      console.warn("Nome utente non recuperato:", e?.code || "", e?.message || e);
+    }
+  }
+
+  // Piano attivo per badge/CTA
   try {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
-    let rawPlan = "free";
-    if (snap.exists()) rawPlan = snap.data().plan || "free";
-    const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
+    let rawPlan = "free-logged";
+    if (snap.exists()) rawPlan = snap.data().plan || "free-logged";
+    const plan = rawPlan;
 
     if (premiumStatus) {
       show(premiumStatus);
 
-      if (plan === "free") {
+      if (plan.startsWith("free")) {
         if (planInfo) planInfo.style.display = "none";
         const cta = ensureFreeCTA();
         if (!premiumStatus.contains(cta)) premiumStatus.appendChild(cta);
@@ -119,7 +122,7 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
   } catch (e) {
-    console.error("Errore lettura piano utente:", e?.message || e);
+    console.error("Errore lettura piano utente:", e?.code || "", e?.message || e);
     if (premiumStatus && planInfo) {
       show(premiumStatus);
       planInfo.style.display = "";

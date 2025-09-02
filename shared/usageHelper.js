@@ -3,7 +3,7 @@
 
 import {
     getFirestore, doc, getDoc, setDoc, runTransaction, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   
   /**
    * Legge il piano dell'utente da Firestore.

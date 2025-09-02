@@ -1,69 +1,72 @@
-import { auth } from "/shared/firebase.js";
+// signup.js — nessuna verifica email: crea account, crea/merge doc utente e porta a home
+import { app, auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  sendEmailVerification,
-  signOut,
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { ensureUserDoc } from "/shared/ensureUserDoc.js";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const signupForm = document.getElementById("signup-form");
 const googleSignupBtn = document.getElementById("google-signup");
-
 const provider = new GoogleAuthProvider();
 
 function goHome() { window.location.replace("index.html"); }
-function setLoading(isLoading) {
-  signupForm.querySelectorAll("button").forEach(b => b.disabled = isLoading);
+function setLoading(b){ signupForm?.querySelectorAll("button").forEach(x => x.disabled = b); }
+
+async function ensureUserDocBase(user, extra = {}) {
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      email: user.email || null,
+      firstName: extra.firstName || null,
+      lastName:  extra.lastName  || null,
+      plan: "free-logged",
+      createdAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 }
 
-// Se già autenticato, vai in home
+// già loggato? vai in home
 onAuthStateChanged(auth, (u) => { if (u) goHome(); });
 
-// Registrazione email/password
-signupForm.addEventListener("submit", async (e) => {
+// Email + password (NO verifica)
+signupForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = signupForm.email.value.trim();
-  const password = signupForm.password.value;
-  const confirmPassword = signupForm.confirmPassword.value;
 
-  if (password !== confirmPassword) {
-    alert("Le password non coincidono.");
-    return;
-  }
+  const firstName = signupForm.firstName.value.trim();
+  const lastName  = signupForm.lastName.value.trim();
+  const email     = signupForm.email.value.trim();
+  const pass      = signupForm.password.value;
+  const pass2     = signupForm.confirmPassword.value;
+
+  if (pass !== pass2) { alert("Le password non coincidono."); return; }
 
   setLoading(true);
   try {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-
-    // Invia email di verifica
-    await sendEmailVerification(user, { url: `${location.origin}/login.html` });
-
-    // Logout immediato: accesso solo dopo verifica
-    await signOut(auth);
-
-    alert("Ti abbiamo inviato un'email per verificare l'indirizzo. Dopo la verifica potrai accedere.");
-    window.location.href = "login.html";
+    const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+    await ensureUserDocBase(user, { firstName, lastName });
+    goHome();
   } catch (err) {
-    console.error("Errore registrazione:", err);
-    alert("Errore: " + (err?.message || "impossibile registrarsi"));
+    console.error("Errore registrazione:", err?.code, err?.message, err);
+    alert(`Errore: ${err?.message || "impossibile registrarsi"}`);
   } finally {
     setLoading(false);
   }
 });
 
-// Registrazione / accesso con Google (nessuna verifica aggiuntiva)
-googleSignupBtn.addEventListener("click", async () => {
+// Google (sempre ok, nessuna verifica extra)
+googleSignupBtn?.addEventListener("click", async () => {
   setLoading(true);
   try {
     const { user } = await signInWithPopup(auth, provider);
-    await ensureUserDoc(auth, db);
+    await ensureUserDocBase(user);
     goHome();
   } catch (err) {
-    console.error("Errore con Google:", err);
-    alert("Errore: " + (err?.message || "impossibile registrarsi con Google"));
+    console.error("Errore con Google:", err?.code, err?.message, err);
+    alert(`Errore: ${err?.message || "impossibile registrarsi con Google"}`);
   } finally {
     setLoading(false);
   }
