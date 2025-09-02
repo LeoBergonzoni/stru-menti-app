@@ -60,27 +60,15 @@ onAuthStateChanged(auth, async (user) => {
     userInfoDiv.style.display = "block";
   }
 
-  // ⛔ Se l'email NON è verificata, non toccare Firestore.
-  if (!user.emailVerified) {
-    if (premiumStatus && planInfo) {
-      show(premiumStatus);
-      planInfo.style.display = "";
-      planInfo.textContent = "👤 Accesso effettuato (verifica la tua email per sbloccare tutte le funzioni).";
-    }
-    return;
-  }
-
-  // === Utente verificato: ora possiamo leggere/scrivere su Firestore ===
-
-  // 1) Assicura che esista SEMPRE users/{uid} (prima creazione con plan/clicks)
+  // === Assicura che esista SEMPRE users/{uid} (prima creazione con plan/clicks)
   try {
     const uref = doc(db, "users", user.uid);
     const usnap = await getDoc(uref);
     if (!usnap.exists()) {
       await setDoc(uref, {
-        plan: "free",                // consentito solo in CREATE dalle rules
+        plan: "free-logged",         // iniziale
         billing: null,
-        clicksPerTool: 40,           // consentito solo in CREATE dalle rules
+        clicksPerTool: 40,           // iniziale
         createdAt: new Date(),
         email: user.email || null,
         firstName: (user.displayName?.split(" ")[0]) || null
@@ -90,7 +78,7 @@ onAuthStateChanged(auth, async (user) => {
     console.warn("Impossibile creare il doc utente:", e?.code || "", e?.message || e);
   }
 
-  // 2) Aggiorna saluto con firstName se presente
+  // Aggiorna saluto con firstName se presente
   if (userInfoDiv) {
     try {
       const uref = doc(db, "users", user.uid);
@@ -105,19 +93,19 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  // 3) Piano attivo per badge/CTA
+  // Piano attivo per badge/CTA
   try {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
 
-    let rawPlan = "free";
-    if (snap.exists()) rawPlan = snap.data().plan || "free";
-    const plan = (rawPlan === "free-logged" || rawPlan === "freelogged") ? "free" : rawPlan;
+    let rawPlan = "free-logged";
+    if (snap.exists()) rawPlan = snap.data().plan || "free-logged";
+    const plan = rawPlan;
 
     if (premiumStatus) {
       show(premiumStatus);
 
-      if (plan === "free") {
+      if (plan.startsWith("free")) {
         if (planInfo) planInfo.style.display = "none";
         const cta = ensureFreeCTA();
         if (!premiumStatus.contains(cta)) premiumStatus.appendChild(cta);
