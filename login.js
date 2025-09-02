@@ -1,12 +1,10 @@
-// login.js
-import { auth, db, isStaging } from "/shared/firebase.js";
+// login.js — niente controllo emailVerified
+import { auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  sendEmailVerification,
-  signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -42,14 +40,6 @@ loginForm?.addEventListener("submit", async (e) => {
   setLoading(true);
   try {
     const { user } = await signInWithEmailAndPassword(auth, email, pass);
-
-    if (!isStaging && !user.emailVerified) {
-      try { await sendEmailVerification(user, { url: `${location.origin}/login.html` }); } catch {}
-      await signOut(auth);
-      alert("Devi prima verificare l’email. Ti ho inviato di nuovo il link.");
-      return;
-    }
-
     await ensureUserDoc(user);
     goHome();
   } catch (err) {
