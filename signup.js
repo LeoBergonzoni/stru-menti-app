@@ -129,6 +129,8 @@ signupForm?.addEventListener("submit", async (e) => {
       handleCodeInApp: false,
     });
 
+    await new Promise(r => setTimeout(r, 500));
+
     const extra = new URLSearchParams();
     extra.set("email", user.email || "");
     if (fromApp) extra.set("redirect_uri", "stru-menti://auth");
