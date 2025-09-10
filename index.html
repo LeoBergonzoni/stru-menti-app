@@ -92,27 +92,6 @@
     <p id="plan-info"></p>
   </section>
 
-  <div id="cookie-banner" style="display: none;">
-    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
-    <button onclick="acceptCookies()">Ok</button>
-  </div>
-
-  <script>
-    function acceptCookies() {
-      document.getElementById('cookie-banner').style.display = 'none';
-      localStorage.setItem('analyticsAccepted', 'true');
-      enableAnalytics();
-    }
-  
-    window.onload = function () {
-      if (localStorage.getItem('analyticsAccepted') === 'true') {
-        enableAnalytics();
-      } else {
-        document.getElementById('cookie-banner').style.display = 'block';
-      }
-    };
-  </script>
-
   <footer>
     <footer>
       <p style="text-align:center;">
