@@ -4,6 +4,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   updateProfile,
+  sendEmailVerification,
   GoogleAuthProvider,
   signInWithRedirect,
   signInWithPopup,
@@ -56,9 +57,10 @@ async function ensureUserDocBase(user, extra = {}) {
     doc(db, "users", user.uid),
     {
       email: user.email || null,
-      firstName: extra.firstName || null,
-      lastName: extra.lastName || null,
-      plan: "free-logged",
+      firstName: extra.firstName ?? null,
+      lastName: extra.lastName ?? null,
+      // usa pending-verify se passato, altrimenti free-logged
+      plan: extra.plan ?? "free-logged",
       createdAt: new Date().toISOString(),
     },
     { merge: true }
@@ -82,12 +84,18 @@ async function ensureUserDocBase(user, extra = {}) {
 })();
 
 // Già loggato? (se ricarichi la pagina ecc.)
-onAuthStateChanged(auth, (u) => {
+onAuthStateChanged(auth, async (u) => {
   if (!u) return;
-  if (fromApp) {
-    gotoApp(u);
+  const isEmailPwd = (u.providerData?.[0]?.providerId === "password");
+  if (isEmailPwd && !u.emailVerified) {
+    const qp = new URLSearchParams();
+    qp.set("email", u.email || "");
+    if (fromApp) qp.set("redirect_uri", redirectUri || "stru-menti://auth");
+    location.replace("verify-email.html?" + qp.toString());
     return;
   }
+  // altrimenti flusso standard:
+  if (fromApp) { gotoApp(u); return; }
   goHome();
 });
 
@@ -114,14 +122,19 @@ signupForm?.addEventListener("submit", async (e) => {
         await updateProfile(user, { displayName: `${firstName} ${lastName}`.trim() });
       } catch {}
     }
-    await ensureUserDocBase(user, { firstName, lastName });
+    await ensureUserDocBase(user, { firstName, lastName, plan:"pending-verify" });
 
-    if (fromApp || isEmbedded) {
-      cleanUrl();
-      gotoApp(user);
-      return;
-    }
-    goHome();
+    await sendEmailVerification(user, { 
+      url: location.origin + "/index.html",
+      handleCodeInApp: false,
+    });
+
+    const extra = new URLSearchParams();
+    extra.set("email", user.email || "");
+    if (fromApp) extra.set("redirect_uri", "stru-menti://auth");
+    location.replace("verify-email.html?" + extra.toString());
+    return;
+
   } catch (err) {
     console.error("Errore registrazione:", err?.code, err?.message, err);
     alert(`Errore: ${err?.message || "impossibile registrarsi"}`);

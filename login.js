@@ -7,6 +7,8 @@ import {
   signInWithRedirect,
   signInWithPopup,
   getRedirectResult,
+  sendEmailVerification,
+  reload,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -52,17 +54,17 @@ async function ensureUserDoc(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
-    await setDoc(
-      ref,
-      {
-        email: user.email || null,
-        plan: "free-logged",
-        createdAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-  } else if (!snap.data()?.plan) {
-    await setDoc(ref, { plan: "free-logged" }, { merge: true });
+    await setDoc(ref, {
+      email: user.email || null,
+      // non forzare verified qui: è solo il profilo base
+      plan: "free-logged",
+      createdAt: new Date().toISOString(),
+    }, { merge: true });
+  } else {
+    const cur = snap.data() || {};
+    if (!("plan" in cur)) {
+      await setDoc(ref, { plan: "free-logged" }, { merge: true });
+    }
   }
 }
 
@@ -83,12 +85,18 @@ async function ensureUserDoc(user) {
 })();
 
 // Già autenticato?
-onAuthStateChanged(auth, (u) => {
+onAuthStateChanged(auth, async (u) => {
   if (!u) return;
-  if (fromApp) {
-    gotoApp(u);
+  const isEmailPwd = (u.providerData?.[0]?.providerId === "password");
+  if (isEmailPwd && !u.emailVerified) {
+    const qp = new URLSearchParams();
+    qp.set("email", u.email || "");
+    if (fromApp) qp.set("redirect_uri", redirectUri || "stru-menti://auth");
+    location.replace("verify-email.html?" + qp.toString());
     return;
   }
+  // altrimenti flusso standard:
+  if (fromApp) { gotoApp(u); return; }
   goHome();
 });
 
@@ -102,6 +110,24 @@ loginForm?.addEventListener("submit", async (e) => {
   try {
     const { user } = await signInWithEmailAndPassword(auth, email, pass);
     await ensureUserDoc(user);
+
+    const isEmailPwd = (user.providerData?.[0]?.providerId === "password");
+    if (isEmailPwd && !user.emailVerified) {
+      try { await reload(user); } catch {}
+      if (!user.emailVerified) {
+        try {
+          await sendEmailVerification(user, {
+          url: location.origin + "/index.html",
+          handleCodeInApp: false,
+          });
+        } catch {}
+        const qp = new URLSearchParams();
+        qp.set("email", user.email || "");
+        if (fromApp) qp.set("redirect_uri", redirectUri);
+        location.replace("verify-email.html?" + qp.toString());
+        return;
+        }
+      }
 
     if (fromApp || isEmbedded) {
       cleanUrl();
