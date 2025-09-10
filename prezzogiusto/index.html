@@ -8,33 +8,18 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💶</text></svg>">
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y66TMZJXBX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-Y66TMZJXBX');
-  </script>
+<!-- Google tag (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-912CBJB8ZW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-912CBJB8ZW'); // niente anonymize_ip: in GA4 è automatico
+</script>
+
 
   <style>
     body { background: linear-gradient(to bottom right, #1e3a8a, #0f172a); }
-
-    /* Cookie banner */
-    #cookie-banner {
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.15); backdrop-filter: blur(6px);
-      color: white; padding: 0.75rem 1rem; border-radius: 0.5rem;
-      font-size: 0.85rem; display: none; z-index: 100; max-width: 90vw; text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    #cookie-banner.show { display: block; }
-    #cookie-ok {
-      display: inline-block; margin-top: 0.5rem; background-color: rgba(255, 255, 255, 0.25);
-      border: none; padding: 0.4rem 0.9rem; border-radius: 0.3rem; color: white;
-      font-size: 0.8rem; cursor: pointer; transition: background 0.3s ease;
-    }
-    #cookie-ok:hover { background-color: rgba(255, 255, 255, 0.4); }
 
     footer { text-align: center; font-size: 0.75rem; color: #cbd5e1; margin-top: 2rem; }
     #bottom-nav { margin-top: 2rem; display: flex; justify-content: center; gap: 1.5rem; font-size: 1.5rem; opacity: 0.6; }
@@ -89,7 +74,8 @@
   </div>
 
   <footer class="mt-6 text-sm text-white text-opacity-70">
-    &copy; 2025 Prezzo Giusto da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI
+    &copy; 2025 Prezzo Giusto da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI - 
+    <a href="https://stru-menti.com/privacy.html">Privacy</a>
   </footer>
 
   <!-- Modale limite -->
@@ -105,28 +91,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Cookie Banner -->
-  <div id="cookie-banner">
-    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#ccc;text-decoration:underline;">Scopri di più</a>.
-    <button id="cookie-ok">OK</button>
-  </div>
-
-  <!-- Script per gestione Cookie -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const banner = document.getElementById("cookie-banner");
-      const okBtn = document.getElementById("cookie-ok");
-
-      if (!localStorage.getItem("cookieAccepted")) {
-        banner.classList.add("show");
-      }
-
-      okBtn.addEventListener("click", () => {
-        banner.classList.remove("show");
-        localStorage.setItem("cookieAccepted", "true");
-      });
-    });
   </script>
 </body>
 </html>

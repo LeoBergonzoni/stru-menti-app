@@ -6,6 +6,15 @@
   <title>Dialettami</title>
   <meta name="description" content="Traduci frasi tra Italiano e i dialetti italiani con l'aiuto dell'AI." />
   
+<!-- Google tag (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-912CBJB8ZW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-912CBJB8ZW'); // niente anonymize_ip: in GA4 è automatico
+</script>
+
   <!-- Favicon emoji 🇮🇹 nella tab del browser -->
   <link rel="icon"
         href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="50" font-size="52">🇮🇹</text></svg>'>
@@ -152,19 +161,13 @@
       </div>    
 
       <div class="footer">
-        <span class="badge">2025 Dialettami da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI</span>
+        <span class="badge">2025 Dialettami da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI - <a href="https://stru-menti.com/privacy.html">Privacy</a></span> 
         <div id="usage-info" class="hidden">
           <span id="plan-label">Anonimo</span>
           <span id="clicks-label">0 / 0</span>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Cookie banner minimal -->
-  <div id="cookie-banner" class="hidden">
-    <span>Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html">Scopri di più</a>.</span>
-    <button onclick="acceptCookies()">Ok</button>
   </div>
 
   <!-- Modale limite raggiunto -->
@@ -178,15 +181,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Google Analytics: caricato ma inizializzato solo dopo consenso -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GQBTEG460W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}    
-    // Consenso di default: denied finché l'utente non accetta
-    gtag('consent', 'default', { 'ad_storage': 'denied', 'analytics_storage': 'denied' });
-  </script>
 
   <!-- Script app -->
   <script type="module" src="script.js"></script>

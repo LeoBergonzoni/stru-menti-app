@@ -9,16 +9,15 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 
-  <style>
-    /* Cookie banner */
-    #cookie-banner{ position:fixed;bottom:0;left:0;width:100%; background:#fff3e6;color:#4b2e2e;padding:0.8rem 1rem; text-align:center;font-size:0.85rem;box-shadow:0 -2px 5px rgba(0,0,0,.05); z-index:1000;display:flex;flex-direction:column;gap:.5rem }
-    #cookie-banner button{background:#e57f3a;color:#fff;border:0;padding:.4rem 1rem;border-radius:6px;cursor:pointer;align-self:center}
-    @media(min-width:500px){#cookie-banner{flex-direction:row;justify-content:center;align-items:center}#cookie-banner button{margin-left:1rem;margin-top:0}}
-    /* toggle modale */
-    #limit-modal{display:none}
-    #limit-modal.active{display:flex}
-  </style>
-</head>
+<!-- Google tag (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-912CBJB8ZW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-912CBJB8ZW'); // niente anonymize_ip: in GA4 è automatico
+</script>
+
 <body>
   <div class="container">
     <h1>🍝 Il Ricettario</h1>
@@ -97,21 +96,6 @@
     </div>
   </div>
 
-  <!-- Cookie banner -->
-  <div id="cookie-banner">
-    Questo sito usa Google Analytics per raccogliere dati anonimi. <a href="privacy.html" style="color:#cc7;text-decoration:underline;">Scopri di più</a>.
-    <button onclick="acceptCookies()">Ok</button>
-  </div>
-
-  <script>
-    function enableAnalytics(){
-      const s=document.createElement('script');s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-E5DDHVS0V6";document.head.appendChild(s);
-      const i=document.createElement('script');i.innerHTML=`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-E5DDHVS0V6');`;document.head.appendChild(i);
-    }
-    function acceptCookies(){localStorage.setItem('analyticsAccepted','true');document.getElementById('cookie-banner').style.display='none';enableAnalytics()}
-    window.onload=()=>{if(localStorage.getItem('analyticsAccepted')==='true'){document.getElementById('cookie-banner').style.display='none';enableAnalytics()}}
-  </script>
-
   <script type="module" src="script.js"></script>
 
   <p style="text-align:center;margin:1rem 0;">
@@ -126,7 +110,8 @@
   </div>
   
   <footer>
-    &copy; 2025 Ricettario da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI 
+    &copy; 2025 Ricettario da Stru🧠Menti – Creato da Leonardo Bergonzoni con 🧠 e AI - 
+    <a href="https://stru-menti.com/privacy.html">Privacy</a>
   </footer>
 
 </body>
