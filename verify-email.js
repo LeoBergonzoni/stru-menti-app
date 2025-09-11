@@ -5,6 +5,7 @@ import {
   sendEmailVerification,
   reload,
   updateProfile,
+  getIdToken
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -76,6 +77,7 @@ onAuthStateChanged(auth, async (u) => {
     return;
   }
   try { await reload(u); } catch {}
+  try { await getIdToken(u, true); } catch {}
   console.log("[verify-email] emailVerified =", u.emailVerified);
 
   if (u.emailVerified) {
@@ -134,6 +136,7 @@ if (iVerifiedBtn) {
     if (!u) { toast("Devi prima effettuare l’accesso."); return; }
     try {
       await reload(u);
+      await getIdToken(u, true);
       if (u.emailVerified) {
         try { await finalizeUserDoc(u); } 
         catch (e) { console.error("finalize doc err:", e); toast("Non riesco a salvare ora. Proseguo."); }

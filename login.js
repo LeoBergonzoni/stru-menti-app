@@ -9,6 +9,7 @@ import {
   getRedirectResult,
   sendEmailVerification,
   reload,
+  getIdToken
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -100,6 +101,7 @@ onAuthStateChanged(auth, async (u) => {
     return;
   }
   // verified → crea se manca + promuovi se serve e vai
+  try { await getIdToken(u, true); } catch {}
   await ensureUserDocIfMissing(u);
   await promoteIfNeeded(u);
   if (fromApp) { gotoApp(u); return; }
@@ -139,6 +141,8 @@ loginForm?.addEventListener("submit", async (e) => {
     }
 
     // verified → crea se manca + promuovi se serve e prosegui
+    try { await getIdToken(user, true); } catch {}
+    await getIdToken(res.user, true);
     await ensureUserDocIfMissing(user);
     await promoteIfNeeded(user);
 

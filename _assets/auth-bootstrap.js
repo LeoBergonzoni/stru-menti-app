@@ -1,6 +1,6 @@
 // /_assets/auth-bootstrap.js
 import { auth, db } from "/shared/firebase.js";
-import { onAuthStateChanged, reload } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { onAuthStateChanged, reload, getIdToken } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 async function ensureUserDocIfMissing(user) {
@@ -35,11 +35,15 @@ async function doWork(u) {
   try {
     await reload(u);
   } catch {}
+  try { await getIdToken(u, true); } catch {}
+
   if (!u.emailVerified) {
     console.log("[bootstrap] user not verified → skip");
     return;
   }
   try {
+    try { await reload(u); } catch {}
+    try { await getIdToken(u, true); } catch {}
     await ensureUserDocIfMissing(u);
     await promoteIfNeeded(u);
   } catch (e) {
