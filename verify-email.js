@@ -104,7 +104,7 @@ onAuthStateChanged(auth, async (u) => {
     }
     finishAndLeave();
   } else {
-    toast("Email non ancora verificata. Controlla la posta o usa i pulsanti qui sotto.");
+    toast("Email non ancora verificata. Controlla la posta o usa i pulsanti qui sopra.");
   }
 });
 
