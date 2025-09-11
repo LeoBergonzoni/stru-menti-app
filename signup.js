@@ -67,6 +67,9 @@ async function ensureUserDocBase(user, extra = {}) {
   );
 }
 
+// Flag per evitare che onAuthStateChanged “scappi” prima che parta l’invio email
+let suppressAuthRedirect = false;
+
 // Se torni da signInWithRedirect → completa il flusso
 (async function handleRedirectIfAny() {
   try {
@@ -74,7 +77,8 @@ async function ensureUserDocBase(user, extra = {}) {
     if (res?.user) {
       await ensureUserDocBase(res.user);
       cleanUrl();
-      gotoApp(res.user);
+      if (fromApp) gotoApp(res.user);
+      else goHome();
       return;
     }
   } catch (e) {
@@ -85,6 +89,7 @@ async function ensureUserDocBase(user, extra = {}) {
 
 // Già loggato? (se ricarichi la pagina ecc.)
 onAuthStateChanged(auth, async (u) => {
+  if (suppressAuthRedirect) return; // 👈 blocca redirect automatici durante il submit
   if (!u) return;
   const isEmailPwd = (u.providerData?.[0]?.providerId === "password");
   if (isEmailPwd && !u.emailVerified) {
@@ -116,21 +121,27 @@ signupForm?.addEventListener("submit", async (e) => {
 
   setLoading(true);
   try {
+    suppressAuthRedirect = true; // 👈 evita race con onAuthStateChanged
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+
+    // Invia la verifica SUBITO (minimizza finestre temporali)
+    await sendEmailVerification(user, {
+      url: location.origin + "/index.html",
+      handleCodeInApp: false,
+    });
+
+    // (facoltativo) micro-pausa per assicurarsi che la richiesta sia partita
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Aggiorna profilo e doc utente (cose "lente" dopo l'invio)
     if (firstName || lastName) {
       try {
         await updateProfile(user, { displayName: `${firstName} ${lastName}`.trim() });
       } catch {}
     }
-    await ensureUserDocBase(user, { firstName, lastName, plan:"pending-verify" });
+    await ensureUserDocBase(user, { firstName, lastName, plan: "pending-verify" });
 
-    await sendEmailVerification(user, { 
-      url: location.origin + "/index.html",
-      handleCodeInApp: false,
-    });
-
-    await new Promise(r => setTimeout(r, 500));
-
+    // Redirect esplicito alla pagina di verifica
     const extra = new URLSearchParams();
     extra.set("email", user.email || "");
     if (fromApp) extra.set("redirect_uri", "stru-menti://auth");
@@ -140,6 +151,8 @@ signupForm?.addEventListener("submit", async (e) => {
   } catch (err) {
     console.error("Errore registrazione:", err?.code, err?.message, err);
     alert(`Errore: ${err?.message || "impossibile registrarsi"}`);
+    // Se resti su questa pagina, riabilita il listener
+    suppressAuthRedirect = false;
   } finally {
     setLoading(false);
   }
