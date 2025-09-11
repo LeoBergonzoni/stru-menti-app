@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verifica la tua email – Stru🧠Menti</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+  <link href="style.css" rel="stylesheet" />
+  <style>
+    body { background:#000; color:#eee; font-family:system-ui,sans-serif; margin:0 }
+    main { max-width:640px; margin:2rem auto; padding:2rem; background:#1a1a1a; border:1px solid #333; border-radius:12px }
+    h1,h2 { margin:0.3rem 0 }
+    p { color:#bbb; line-height:1.5 }
+    .actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem }
+    button, a.btn { border:none; border-radius:8px; padding:.8rem 1rem; cursor:pointer; text-decoration:none; display:inline-block }
+    button.primary, a.btn.primary { background:#322290; color:#fff }
+    button.ghost, a.btn.ghost { background:#fff; color:#000 }
+    .hint { font-size:.9rem; color:#9aa }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Controlla la tua casella email</h1>
+    <p>
+      Ti abbiamo inviato un’email con il link di verifica all’indirizzo: <strong id="target-email"></strong>.<br/>
+      Apri il link per confermare il tuo indirizzo e completare l’accesso.
+    </p>
+
+    <div class="actions">
+      <a id="open-mail" class="btn ghost" href="mailto:">Apri la tua email e controlla anche nelle Spam</a>
+      <button id="resend" class="primary">Invia di nuovo il link</button>
+      <button id="i-verified" class="primary">Ho verificato</button>
+      <a class="btn" href="login.html">Torna al login</a>
+    </div>
+
+    <p class="hint" id="status"></p>
+  </main>
+
+  <script type="module" src="verify-email.js"></script>
+</body>
+</html>
