@@ -1,4 +1,4 @@
-// verify-email.js — pagina di attesa/verifica + creazione doc utente post-verifica (robusta)
+// verify-email.js — pagina verifica + scrittura doc utente post-verifica (tollerante agli errori)
 import { auth, db } from "/shared/firebase.js";
 import {
   onAuthStateChanged,
@@ -25,11 +25,15 @@ const iVerifiedBtn  = $("i-verified");
 
 if (targetEmailEl) targetEmailEl.textContent = emailParam || "(la tua email)";
 if (openMailEl)    openMailEl.href = "mailto:" + (emailParam || "");
-function toast(msg){ if (statusEl) statusEl.textContent = msg; console.log("[verify-email]", msg); }
+
+function toast(msg){
+  if (statusEl) statusEl.textContent = msg;
+  console.log("[verify-email]", msg);
+}
 
 // --- Scrive/aggiorna il doc utente SOLO dopo verifica ---
 async function finalizeUserDoc(u) {
-  console.log("[verify-email] finalizeUserDoc for uid:", u?.uid, "verified:", u?.emailVerified);
+  console.log("[verify-email] finalizeUserDoc", { uid: u?.uid, verified: u?.emailVerified });
   if (!u || !u.uid) return;
 
   // 1) profilo temporaneo (nome/cognome) salvato da signup
@@ -43,34 +47,22 @@ async function finalizeUserDoc(u) {
     try { await updateProfile(u, { displayName: `${firstName || ""} ${lastName || ""}`.trim() }); } catch {}
   }
 
-  // 3) scrittura doc utente
-  try {
-    await setDoc(
-      doc(db, "users", u.uid),
-      {
-        email: u.email || null,
-        firstName, lastName,
-        plan: "free-logged",
-        createdAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-    console.log("[verify-email] user doc created/updated");
-  } catch (e) {
-    console.error("[verify-email] setDoc error:", e?.code, e?.message, e);
-    // Aiuta a diagnosticare permessi/rules
-    if (statusEl) {
-      statusEl.textContent = "Errore durante il salvataggio dell'utente. Riprova.";
-    } else {
-      alert("Errore durante il salvataggio dell'utente. Riprova.");
-    }
-    throw e;
-  } finally {
-    sessionStorage.removeItem("pendingProfile");
-  }
+  // 3) scrittura doc utente (merge: true)
+  await setDoc(
+    doc(db, "users", u.uid),
+    {
+      email: u.email || null,
+      firstName, lastName,
+      plan: "free-logged",
+      createdAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+
+  // pulizia
+  sessionStorage.removeItem("pendingProfile");
 }
 
-// --- Redirect helper (dopo finalize o se già ok) ---
 function finishAndLeave() {
   if (redirectUri) location.replace(redirectUri);
   else location.replace("index.html");
@@ -80,7 +72,7 @@ function finishAndLeave() {
 onAuthStateChanged(auth, async (u) => {
   console.log("[verify-email] onAuthStateChanged; user:", !!u);
   if (!u) {
-    toast("Accedi per completare la verifica.");
+    toast("Accedi per completare la verifica (stesso browser).");
     return;
   }
   try { await reload(u); } catch {}
@@ -88,18 +80,25 @@ onAuthStateChanged(auth, async (u) => {
 
   if (u.emailVerified) {
     try {
-      // (opzionale) controlla se il doc già esiste; se no crealo
+      // Se il doc manca → crealo; se c'è ma è pending → promuovi
       const ref = doc(db, "users", u.uid);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
         await finalizeUserDoc(u);
+        console.log("[verify-email] user doc created");
       } else {
-        console.log("[verify-email] user doc already exists, skipping creation");
+        const cur = snap.data() || {};
+        if (cur.plan === "pending-verify" || !("plan" in cur)) {
+          await setDoc(ref, { plan: "free-logged" }, { merge: true });
+          console.log("[verify-email] user plan promoted to free-logged");
+        } else {
+          console.log("[verify-email] user doc already ok");
+        }
       }
     } catch (e) {
-      // Se fallisce qui, resta in pagina e mostra il messaggio
-      console.error("[verify-email] finalize flow error:", e);
-      return;
+      console.error("[verify-email] Firestore write error:", e?.code, e?.message, e);
+      // NON blocchiamo il flusso: la home con _assets/auth-bootstrap.js completerà la creazione
+      toast("Non riesco a salvare ora. Continuiamo: completerò in automatico.");
     }
     finishAndLeave();
   } else {
@@ -113,7 +112,7 @@ if (resendBtn) {
     const u = auth.currentUser;
     if (!u) { toast("Devi prima effettuare l’accesso."); return; }
     try {
-      // NB: continue verso verify-email.html per garantire finalize in ogni percorso
+      // continue verso verify-email.html per garantire finalize in ogni percorso
       const contUrl = new URL(location.origin + "/verify-email.html");
       contUrl.searchParams.set("email", u.email || "");
       if (redirectUri) contUrl.searchParams.set("redirect_uri", redirectUri);
@@ -136,7 +135,8 @@ if (iVerifiedBtn) {
     try {
       await reload(u);
       if (u.emailVerified) {
-        try { await finalizeUserDoc(u); } catch (e) { console.error("finalize doc err:", e); return; }
+        try { await finalizeUserDoc(u); } 
+        catch (e) { console.error("finalize doc err:", e); toast("Non riesco a salvare ora. Proseguo."); }
         finishAndLeave();
       } else {
         toast("Non risulta ancora verificata. Controlla la posta/spam.");
