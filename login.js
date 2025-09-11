@@ -30,6 +30,7 @@ function gotoApp(user) {
   location.href = `${redirectUri}?uid=${uid}&email=${email}&name=${name}`;
 }
 
+function goHome() { window.location.replace("index.html"); }
 function cleanUrl() {
   if ("replaceState" in history) {
     const url = new URL(location.href);
@@ -42,28 +43,16 @@ function cleanUrl() {
 const loginForm = document.getElementById("login-form");
 const googleLoginBtn = document.getElementById("google-login");
 const provider = new GoogleAuthProvider();
+function setLoading(b) { loginForm?.querySelectorAll("button").forEach((x) => (x.disabled = b)); }
 
-function goHome() {
-  window.location.replace("index.html");
-}
-function setLoading(b) {
-  loginForm?.querySelectorAll("button").forEach((x) => (x.disabled = b));
-}
-
-async function ensureUserDoc(user) {
+// Promuove pending-verify → free-logged se l'utente è verified
+async function promoteIfNeeded(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      email: user.email || null,
-      // non forzare verified qui: è solo il profilo base
-      plan: "free-logged",
-      createdAt: new Date().toISOString(),
-    }, { merge: true });
-  } else {
-    const cur = snap.data() || {};
-    if (!("plan" in cur)) {
-      await setDoc(ref, { plan: "free-logged" }, { merge: true });
+  const cur = snap.exists() ? (snap.data() || {}) : {};
+  if (user.emailVerified && (!("plan" in cur) || cur.plan === "pending-verify")) {
+    try { await setDoc(ref, { plan: "free-logged" }, { merge: true }); } catch (e) {
+      console.error("cannot promote plan:", e);
     }
   }
 }
@@ -73,7 +62,8 @@ async function ensureUserDoc(user) {
   try {
     const res = await getRedirectResult(auth);
     if (res?.user) {
-      await ensureUserDoc(res.user);
+      // Google è sempre verified → assicura doc base
+      await promoteIfNeeded(res.user);
       cleanUrl();
       gotoApp(res.user);
       return;
@@ -91,11 +81,12 @@ onAuthStateChanged(auth, async (u) => {
   if (isEmailPwd && !u.emailVerified) {
     const qp = new URLSearchParams();
     qp.set("email", u.email || "");
-    if (fromApp) qp.set("redirect_uri", redirectUri || "stru-menti://auth");
+    if (fromApp) qp.set("redirect_uri", redirectUri);
     location.replace("verify-email.html?" + qp.toString());
     return;
   }
-  // altrimenti flusso standard:
+  // verified → promuovi se serve e vai
+  await promoteIfNeeded(u);
   if (fromApp) { gotoApp(u); return; }
   goHome();
 });
@@ -109,16 +100,16 @@ loginForm?.addEventListener("submit", async (e) => {
   setLoading(true);
   try {
     const { user } = await signInWithEmailAndPassword(auth, email, pass);
-    await ensureUserDoc(user);
 
     const isEmailPwd = (user.providerData?.[0]?.providerId === "password");
-    if (isEmailPwd && !user.emailVerified) {
+    if (isEmailPwd) {
       try { await reload(user); } catch {}
       if (!user.emailVerified) {
+        // non creare/aggiornare doc: rimanda alla pagina di verifica e invia mail
         try {
           await sendEmailVerification(user, {
-          url: location.origin + "/index.html",
-          handleCodeInApp: false,
+            url: location.origin + "/index.html",
+            handleCodeInApp: false,
           });
         } catch {}
         const qp = new URLSearchParams();
@@ -126,14 +117,13 @@ loginForm?.addEventListener("submit", async (e) => {
         if (fromApp) qp.set("redirect_uri", redirectUri);
         location.replace("verify-email.html?" + qp.toString());
         return;
-        }
       }
-
-    if (fromApp || isEmbedded) {
-      cleanUrl();
-      gotoApp(user);
-      return;
     }
+
+    // verified → promuovi se serve e prosegui
+    await promoteIfNeeded(user);
+
+    if (fromApp || isEmbedded) { cleanUrl(); gotoApp(user); return; }
     goHome();
   } catch (err) {
     console.error("Errore di login:", err?.code, err?.message, err);
@@ -149,15 +139,10 @@ googleLoginBtn?.addEventListener("click", async () => {
   try {
     if (fromApp || isEmbedded) {
       await signInWithRedirect(auth, provider);
-      // ritorno → getRedirectResult
     } else {
       const { user } = await signInWithPopup(auth, provider);
-      await ensureUserDoc(user);
-      if (fromApp) {
-        cleanUrl();
-        gotoApp(user);
-        return;
-      }
+      await promoteIfNeeded(user);
+      if (fromApp) { cleanUrl(); gotoApp(user); return; }
       goHome();
     }
   } catch (err) {
