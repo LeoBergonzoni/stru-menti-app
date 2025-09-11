@@ -142,7 +142,7 @@ loginForm?.addEventListener("submit", async (e) => {
 
     // verified → crea se manca + promuovi se serve e prosegui
     try { await getIdToken(user, true); } catch {}
-    await getIdToken(res.user, true);
+    await getIdToken(user, true);
     await ensureUserDocIfMissing(user);
     await promoteIfNeeded(user);
 
