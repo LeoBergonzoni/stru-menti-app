@@ -97,9 +97,14 @@ signupForm?.addEventListener("submit", async (e) => {
     suppressAuthRedirect = true;
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
 
-    // Invia la verifica SUBITO
+    // Costruisci il continue URL verso verify-email.html (con parametri)
+    const contUrl = new URL(location.origin + "/verify-email.html");
+    contUrl.searchParams.set("email", user.email || "");
+    if (fromApp) contUrl.searchParams.set("redirect_uri", "stru-menti://auth");
+
+    // Invia la verifica SUBITO, verso verify-email.html
     await sendEmailVerification(user, {
-      url: location.origin + "/index.html",
+      url: contUrl.toString(),
       handleCodeInApp: false,
     });
 
@@ -114,7 +119,7 @@ signupForm?.addEventListener("submit", async (e) => {
       try { await updateProfile(user, { displayName: `${firstName} ${lastName}`.trim() }); } catch {}
     }
 
-    // Redirect esplicito alla pagina di verifica
+    // Redirect esplicito alla pagina di verifica (coerente col continue URL)
     const extra = new URLSearchParams();
     extra.set("email", user.email || "");
     if (fromApp) extra.set("redirect_uri", "stru-menti://auth");

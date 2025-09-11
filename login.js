@@ -45,6 +45,19 @@ const googleLoginBtn = document.getElementById("google-login");
 const provider = new GoogleAuthProvider();
 function setLoading(b) { loginForm?.querySelectorAll("button").forEach((x) => (x.disabled = b)); }
 
+// Crea il doc utente se non esiste (per utenti già verified)
+async function ensureUserDocIfMissing(user) {
+  const ref  = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      email: user.email || null,
+      plan: "free-logged",
+      createdAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+}
+
 // Promuove pending-verify → free-logged se l'utente è verified
 async function promoteIfNeeded(user) {
   const ref = doc(db, "users", user.uid);
@@ -62,7 +75,8 @@ async function promoteIfNeeded(user) {
   try {
     const res = await getRedirectResult(auth);
     if (res?.user) {
-      // Google è sempre verified → assicura doc base
+      // Google è sempre verified → crea doc se manca e promuovi se serve
+      await ensureUserDocIfMissing(res.user);
       await promoteIfNeeded(res.user);
       cleanUrl();
       gotoApp(res.user);
@@ -85,7 +99,8 @@ onAuthStateChanged(auth, async (u) => {
     location.replace("verify-email.html?" + qp.toString());
     return;
   }
-  // verified → promuovi se serve e vai
+  // verified → crea se manca + promuovi se serve e vai
+  await ensureUserDocIfMissing(u);
   await promoteIfNeeded(u);
   if (fromApp) { gotoApp(u); return; }
   goHome();
@@ -105,10 +120,13 @@ loginForm?.addEventListener("submit", async (e) => {
     if (isEmailPwd) {
       try { await reload(user); } catch {}
       if (!user.emailVerified) {
-        // non creare/aggiornare doc: rimanda alla pagina di verifica e invia mail
+        // invia verifica con continue verso verify-email.html
         try {
+          const contUrl = new URL(location.origin + "/verify-email.html");
+          contUrl.searchParams.set("email", user.email || "");
+          if (fromApp) contUrl.searchParams.set("redirect_uri", redirectUri);
           await sendEmailVerification(user, {
-            url: location.origin + "/index.html",
+            url: contUrl.toString(),
             handleCodeInApp: false,
           });
         } catch {}
@@ -120,7 +138,8 @@ loginForm?.addEventListener("submit", async (e) => {
       }
     }
 
-    // verified → promuovi se serve e prosegui
+    // verified → crea se manca + promuovi se serve e prosegui
+    await ensureUserDocIfMissing(user);
     await promoteIfNeeded(user);
 
     if (fromApp || isEmbedded) { cleanUrl(); gotoApp(user); return; }
@@ -141,6 +160,7 @@ googleLoginBtn?.addEventListener("click", async () => {
       await signInWithRedirect(auth, provider);
     } else {
       const { user } = await signInWithPopup(auth, provider);
+      await ensureUserDocIfMissing(user);
       await promoteIfNeeded(user);
       if (fromApp) { cleanUrl(); gotoApp(user); return; }
       goHome();
