@@ -1,5 +1,5 @@
 // signup.js — signup web + rientro in app via deep link (compatibile con browser embedded)
-import { app, auth } from "/shared/firebase.js";
+import { app, auth, db } from "/shared/firebase.js"; // ⬅️ importa anche db
 import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
@@ -10,6 +10,7 @@ import {
   signInWithPopup,
   getRedirectResult,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"; // ⬅️ Firestore
 
 // -------- helper deep link & contesto ----------
 const q = new URLSearchParams(location.search);
@@ -17,7 +18,6 @@ const fromApp = q.get("from") === "app";
 const rawRedirect = q.get("redirect_uri") || "stru-menti://auth";
 const redirectUri = rawRedirect.startsWith("stru-menti://") ? rawRedirect : "stru-menti://auth";
 
-// “embedded” euristico: WebView, in-app browsers, ecc.
 const isEmbedded =
   /WebView|wv|FBAN|FBAV|Instagram|Line|OKHttp|CriOS\/.*Mobile|Mobile(?!.*Safari)/i.test(
     navigator.userAgent || ""
@@ -44,6 +44,21 @@ const signupForm = document.getElementById("signup-form");
 const googleSignupBtn = document.getElementById("google-signup");
 const provider = new GoogleAuthProvider();
 function setLoading(b) { signupForm?.querySelectorAll("button").forEach((x) => (x.disabled = b)); }
+
+// ⬇️ crea/merge profilo base
+async function ensureUserDocBase(user, extra = {}) {
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      email: user.email || null,
+      firstName: extra.firstName ?? null,
+      lastName:  extra.lastName ?? null,
+      plan: extra.plan ?? "pending-verify", // ⬅️ default pending-verify
+      createdAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
 
 // Flag per evitare che onAuthStateChanged “scappi” prima che parta l’invio email
 let suppressAuthRedirect = false;
@@ -97,29 +112,29 @@ signupForm?.addEventListener("submit", async (e) => {
     suppressAuthRedirect = true;
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
 
-    // Costruisci il continue URL verso verify-email.html (con parametri)
+    // ⬇️ CREA SUBITO il profilo base come pending-verify
+    await ensureUserDocBase(user, { firstName, lastName, plan: "pending-verify" });
+
+    // Continue URL verso verify-email.html
     const contUrl = new URL(location.origin + "/verify-email.html");
     contUrl.searchParams.set("email", user.email || "");
     if (fromApp) contUrl.searchParams.set("redirect_uri", "stru-menti://auth");
 
-    // Invia la verifica SUBITO, verso verify-email.html
+    // Invia la verifica SUBITO
     await sendEmailVerification(user, {
       url: contUrl.toString(),
       handleCodeInApp: false,
     });
 
-    // salva temporaneamente i dati profilo (li scriveremo DOPO la verifica)
+    // Salva nome/cognome per eventuale use-after-verify
     sessionStorage.setItem("pendingProfile", JSON.stringify({ firstName, lastName }));
 
-    // (opzionale) micro-pausa per sicurezza
-    await new Promise((r) => setTimeout(r, 200));
-
-    // (facoltativo) displayName già ora – non influisce sul doc Firestore
+    // (facoltativo) displayName già ora
     if (firstName || lastName) {
       try { await updateProfile(user, { displayName: `${firstName} ${lastName}`.trim() }); } catch {}
     }
 
-    // Redirect esplicito alla pagina di verifica (coerente col continue URL)
+    // Redirect esplicito alla pagina di verifica
     const extra = new URLSearchParams();
     extra.set("email", user.email || "");
     if (fromApp) extra.set("redirect_uri", "stru-menti://auth");
