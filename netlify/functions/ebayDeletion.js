@@ -5,22 +5,9 @@ export const handler = async (event) => {
       const qs = event.queryStringParameters || {};
       const contentType = (headers["content-type"] || headers["Content-Type"] || "").toLowerCase();
   
-      // Log diagnostico: rimuovi se fastidioso
-      console.log("eBay incoming:", {
-        method,
-        qs,
-        // attenzione a non loggare dati sensibili in produzione
-        headers: {
-          "content-type": headers["content-type"] || headers["Content-Type"],
-          "user-agent": headers["user-agent"] || headers["User-Agent"],
-          "x-forwarded-for": headers["x-forwarded-for"],
-        },
-        rawBodyLen: event.body ? event.body.length : 0,
-      });
-  
       const expectedToken = process.env.EBAY_DELETION_TOKEN || "";
   
-      // --- parse body ---
+      // --- parse body per POST (JSON o form) ---
       let body = {};
       if (method === "POST" && event.body) {
         if (contentType.includes("application/json")) {
@@ -32,61 +19,53 @@ export const handler = async (event) => {
         }
       }
   
-      // challenge (copriamo varie chiavi)
+      // challenge in varie chiavi (GET/POST)
       const challenge =
         qs.challenge_code || qs.challengeCode || qs.challenge ||
         body.challenge_code || body.challengeCode || body.challenge ||
         body?.metadata?.challengeCode || body?.metadata?.challenge_code ||
         null;
   
-      // token (varie chiavi + header)
+      // token in varie chiavi / header
       const receivedToken =
         qs.verification_token || qs.verificationToken ||
         body.verification_token || body.verificationToken ||
         headers["x-ebay-verification-token"] || headers["x-verification-token"] ||
         "";
   
-      if (expectedToken && receivedToken && expectedToken !== receivedToken) {
-        console.warn("⚠️ Token mismatch:", { expectedTokenLen: expectedToken.length, receivedToken });
-        // NON blocchiamo con 403 per permettere la validazione lato eBay
-      }
-  
-      // Caso 1: eBay ci chiede di echi-are un challenge
+      // --- FASE DI VALIDAZIONE: eBay vuole l'eco del challenge in PLAIN TEXT ---
       if (challenge) {
-        // restituiamo JSON come da guideline
+        // Alcuni check leggono anche questi header; non fanno male:
+        const respHeaders = {
+          "Content-Type": "text/plain",
+          "x-ebay-challenge-response": String(challenge),
+        };
+        if (expectedToken) {
+          respHeaders["x-ebay-verification-token"] = expectedToken;
+        }
         return {
           statusCode: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ challengeResponse: String(challenge) }),
+          headers: respHeaders,
+          body: String(challenge), // <<-- PLAIN TEXT identico
         };
       }
   
-      // Caso 2: niente challenge ma c'è un token -> alcuni flussi si aspettano eco del token in chiaro
+      // Se niente challenge ma arriva il token, echi-amo il token (plain text) per compatibilità
       if (!challenge && receivedToken) {
-        // rispondiamo sia plain text che JSON a seconda di cosa accettano
-        const wantsJson = contentType.includes("application/json");
-        if (wantsJson) {
-          return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verificationToken: String(receivedToken) }),
-          };
-        } else {
-          return {
-            statusCode: 200,
-            headers: { "Content-Type": "text/plain" },
-            body: String(receivedToken),
-          };
-        }
+        return {
+          statusCode: 200,
+          headers: {
+            "Content-Type": "text/plain",
+            "x-ebay-verification-token": receivedToken,
+          },
+          body: String(receivedToken),
+        };
       }
   
-      // Caso 3: notifica reale di deletion/closure
-      console.log("Deletion/closure payload:", { qs, body });
-      // TODO: se mai tratterai utenti eBay, elimina/anonimizza qui i dati relativi.
+      // Notifica reale di deletion/closure (qui solo 200)
       return { statusCode: 200, body: "OK" };
-  
     } catch (e) {
-      console.error("ebayDeletion error:", e);
+      // eBay preferisce 200 per non ritentare all'infinito
       return { statusCode: 200, body: "OK" };
     }
   };
