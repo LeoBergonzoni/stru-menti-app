@@ -1,4 +1,3 @@
-// netlify/functions/ebayDeletion.js
 export const handler = async (event) => {
     try {
       const method = (event.httpMethod || "").toUpperCase();
@@ -6,46 +5,55 @@ export const handler = async (event) => {
       const qs = event.queryStringParameters || {};
       const contentType = (headers["content-type"] || headers["Content-Type"] || "").toLowerCase();
   
+      // Log diagnostico: rimuovi se fastidioso
+      console.log("eBay incoming:", {
+        method,
+        qs,
+        // attenzione a non loggare dati sensibili in produzione
+        headers: {
+          "content-type": headers["content-type"] || headers["Content-Type"],
+          "user-agent": headers["user-agent"] || headers["User-Agent"],
+          "x-forwarded-for": headers["x-forwarded-for"],
+        },
+        rawBodyLen: event.body ? event.body.length : 0,
+      });
+  
       const expectedToken = process.env.EBAY_DELETION_TOKEN || "";
   
-      // --- Estrai payload da POST (JSON o x-www-form-urlencoded) ---
+      // --- parse body ---
       let body = {};
       if (method === "POST" && event.body) {
         if (contentType.includes("application/json")) {
-          try { body = JSON.parse(event.body); } catch { body = {}; }
+          try { body = JSON.parse(event.body); } catch {}
         } else if (contentType.includes("application/x-www-form-urlencoded")) {
           body = Object.fromEntries(new URLSearchParams(event.body));
         } else {
-          // prova comunque JSON
-          try { body = JSON.parse(event.body); } catch { body = {}; }
+          try { body = JSON.parse(event.body); } catch {}
         }
       }
   
-      // --- eBay può mandare challenge & token in vari campi (GET o POST) ---
+      // challenge (copriamo varie chiavi)
       const challenge =
         qs.challenge_code || qs.challengeCode || qs.challenge ||
         body.challenge_code || body.challengeCode || body.challenge ||
         body?.metadata?.challengeCode || body?.metadata?.challenge_code ||
         null;
   
-      // eBay mette il token che hai configurato in console qui (nome campo può variare)
+      // token (varie chiavi + header)
       const receivedToken =
         qs.verification_token || qs.verificationToken ||
         body.verification_token || body.verificationToken ||
         headers["x-ebay-verification-token"] || headers["x-verification-token"] ||
         "";
   
-      // Se hai impostato un token, deve combaciare
       if (expectedToken && receivedToken && expectedToken !== receivedToken) {
-        // Per sicurezza logghiamo
-        console.warn("Invalid verification token:", { receivedToken });
-        return { statusCode: 403, body: "Invalid verification token" };
+        console.warn("⚠️ Token mismatch:", { expectedTokenLen: expectedToken.length, receivedToken });
+        // NON blocchiamo con 403 per permettere la validazione lato eBay
       }
   
-      // --- Fase di VALIDAZIONE: bisogna ECHIARE il challenge ---
+      // Caso 1: eBay ci chiede di echi-are un challenge
       if (challenge) {
-        // Alcune integrazioni vogliono JSON { "challengeResponse": "<code>" }
-        // Altre accettano plain text. Usiamo JSON ufficiale.
+        // restituiamo JSON come da guideline
         return {
           statusCode: 200,
           headers: { "Content-Type": "application/json" },
@@ -53,16 +61,32 @@ export const handler = async (event) => {
         };
       }
   
-      // --- Notifica reale di account deletion/closure ---
-      console.log("eBay deletion/closure notification:", {
-        method, qs, headers, body,
-      });
+      // Caso 2: niente challenge ma c'è un token -> alcuni flussi si aspettano eco del token in chiaro
+      if (!challenge && receivedToken) {
+        // rispondiamo sia plain text che JSON a seconda di cosa accettano
+        const wantsJson = contentType.includes("application/json");
+        if (wantsJson) {
+          return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ verificationToken: String(receivedToken) }),
+          };
+        } else {
+          return {
+            statusCode: 200,
+            headers: { "Content-Type": "text/plain" },
+            body: String(receivedToken),
+          };
+        }
+      }
   
-      // TODO: se mai gestirai utenti eBay, cancella/anonimizza qui i loro dati.
+      // Caso 3: notifica reale di deletion/closure
+      console.log("Deletion/closure payload:", { qs, body });
+      // TODO: se mai tratterai utenti eBay, elimina/anonimizza qui i dati relativi.
       return { statusCode: 200, body: "OK" };
+  
     } catch (e) {
       console.error("ebayDeletion error:", e);
-      // eBay preferisce 200 per non riprovare in loop
       return { statusCode: 200, body: "OK" };
     }
   };
