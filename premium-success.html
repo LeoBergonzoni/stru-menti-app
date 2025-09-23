@@ -11,6 +11,13 @@
     .spinner{width:28px;height:28px;border:3px solid #444;border-top-color:#fff;border-radius:50%;margin:16px auto;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
   </style>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b1a2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/_assets/icons/icon-192.png">
+
 </head>
 <body>
   <main>
@@ -24,5 +31,6 @@
     // piccolo redirect automatico dopo 2.5s
     setTimeout(() => { window.location.href = "index.html?sub=ok"; }, 2500);
   </script>
+  <script src="/shared/pwa.js"></script>
 </body>
 </html>
